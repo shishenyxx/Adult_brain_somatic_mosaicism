@@ -14,5 +14,8 @@ This repository is a collaboration of codes and scripts used in the analysis of 
 # 3. Pipelines for the data analysis, variant filtering, comprehensive annotations, and statistical analysis
 ## 3.1 Pipelines for mosaic variant determination, annotations, and plotting
 ## 3.2 Pipelines for statistically analysis, QC, and the related plotting
+Computational simulations for left-right starting populations
 ## 3.3 Pipelines for sorted population, the QC of sorting
 ## 3.4 Pipelines for further analysis
+
+Umap clustering for variants and sequenced samples
