@@ -14,6 +14,8 @@ This repository is a collaboration of codes and scripts used in the analysis of 
 
 # 3. Pipelines for the data analysis, variant filtering, comprehensive annotations, and statistical analysis
 ## 3.1 Pipelines for mosaic variant determination, annotations, and plotting
+[Codes and config files](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/circos) for the Circos plot of square root-transformed AFs measured by MPAS.
+
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/permutation) for permutation analysis from gnomAD and [codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Genomic_enrichment/Plot_enrichment.r) for plotting the permutation result.
 
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Supplement_data_single_cell/AF_for_single_cell.r) for plotting of AF measured in snMAPS.
