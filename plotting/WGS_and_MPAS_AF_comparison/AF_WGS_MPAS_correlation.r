@@ -25,7 +25,7 @@ raw<-raw[raw$FLAG_NOISE=="FALSE",]
 
 bks2=c(0,0.0014,0.05,0.1,0.20,0.3,0.4,0.5,0.6)
 
-pdf(file="2020_05_24_MAF_in_WGS_and_AmpliSeq_no_noise.pdf",width=10,height=7)
+pdf(file="2020_06_18_MAF_in_WGS_and_AmpliSeq_no_noise.pdf",width=10,height=7)
 
 ggplot(raw,aes(x=sqrt(WGS_MAF),xmax=sqrt(WGS_UPPER_CI),xmin=sqrt(WGS_LOWER_CI),y=sqrt(AmpliSeq_MAF),ymax=sqrt(AmpliSeq_UPPER_CI),ymin=sqrt(AmpliSeq_LOWER_CI),col=CAT_LABEL,fill=CAT_LABEL))+
 	geom_point(size=0.5)+
