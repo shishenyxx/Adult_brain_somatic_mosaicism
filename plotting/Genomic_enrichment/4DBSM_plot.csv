@@ -1,0 +1,109 @@
+GROUP,CATEGORY,FRACTION,Lower_CI,Upper_CI,Color
+All Variants,H3k27ac_H1hesc,0.200772201,0.19305,0.301158,grey
+All Variants,H3k4me3_H1hesc,0.027027027,0.030888,0.0888031,pink
+All Variants,NCBI_exons_merged,0.027027027,0.027027,0.0810811,grey
+All Variants,UCSC_CpG_islands,0,0.003861,0.03861,pink
+All Variants,H3k27ac_merged,0.347490347,0.316602,0.432528525,grey
+All Variants,H3k4me3_merged,0.200772201,0.162162,0.262548,grey
+All Variants,NCBI_gene_merged,0.50965251,0.474903,0.598456,grey
+All Variants,vista_enhancers,0,0,0.00772201,pink
+All Variants,H3k4me1_H1hesc,0.208494208,0.166023,0.277992,grey
+All Variants,wgEncodeRegDnaseClusteredV3,0.231660232,0.208494,0.312741,grey
+All Variants,H3k4me1_merged,0.397683398,0.409266,0.532819,pink
+All Variants,wgEncodeRegTfbsClusteredV3,0.173745174,0.142857,0.239382,grey
+All Variants,NCBI_introns_merged,0.494208494,0.432432,0.555985,grey
+All Variants,H3k27me3_H1hesc,0.108108108,0.0694981,0.150579,grey
+All Variants,H3k27me3_merged,0.586872587,0.555985,0.671815,grey
+All Variants,hg19_early_timing_PMID19966280,0.308880309,0.335907,0.46332,pink
+All Variants,hg19_late_timing_PMID19966280,0.428571429,0.3861,0.521236,grey
+All Variants,TOP_2A_2B_PMID28735753_merged,0.084942085,0.0694981,0.142857,grey
+Brain and Organs,H3k27ac_H1hesc,0.231884058,0.144928,0.347826,grey
+Brain and Organs,H3k4me3_H1hesc,0.028985507,0.0144928,0.115942,grey
+Brain and Organs,NCBI_exons_merged,0.014492754,0.0144928,0.115942,pink
+Brain and Organs,UCSC_CpG_islands,0,0,0.057971,pink
+Brain and Organs,H3k27ac_merged,0.376811594,0.26087,0.492754,grey
+Brain and Organs,H3k4me3_merged,0.289855072,0.115942,0.318841,grey
+Brain and Organs,NCBI_gene_merged,0.507246377,0.42029,0.652174,grey
+Brain and Organs,vista_enhancers,0,0,0.0144928,pink
+Brain and Organs,H3k4me1_H1hesc,0.289855072,0.115942,0.333333,grey
+Brain and Organs,wgEncodeRegDnaseClusteredV3,0.231884058,0.15942,0.362319,grey
+Brain and Organs,H3k4me1_merged,0.449275362,0.362319,0.594203,grey
+Brain and Organs,wgEncodeRegTfbsClusteredV3,0.173913043,0.101449,0.289855,grey
+Brain and Organs,NCBI_introns_merged,0.507246377,0.376812,0.608696,grey
+Brain and Organs,H3k27me3_H1hesc,0.144927536,0.0434783,0.188406,grey
+Brain and Organs,H3k27me3_merged,0.637681159,0.492754,0.724638,grey
+Brain and Organs,hg19_early_timing_PMID19966280,0.260869565,0.289855,0.521739,pink
+Brain and Organs,hg19_late_timing_PMID19966280,0.376811594,0.318841,0.57971,grey
+Brain and Organs,TOP_2A_2B_PMID28735753_merged,0.057971014,0.0434783,0.188406,grey
+Brain only,H3k27ac_H1hesc,0.176136364,0.181818,0.3125,pink
+Brain only,H3k4me3_H1hesc,0.022727273,0.0227273,0.0965909,pink
+Brain only,NCBI_exons_merged,0.034090909,0.0227273,0.0852273,grey
+Brain only,UCSC_CpG_islands,0,0,0.0397727,pink
+Brain only,H3k27ac_merged,0.329545455,0.306818,0.448864,grey
+Brain only,H3k4me3_merged,0.159090909,0.153409,0.272727,grey
+Brain only,NCBI_gene_merged,0.505681818,0.465909,0.613636,grey
+Brain only,vista_enhancers,0,0,0.0113636,pink
+Brain only,H3k4me1_H1hesc,0.176136364,0.153409,0.295455,grey
+Brain only,wgEncodeRegDnaseClusteredV3,0.227272727,0.193182,0.323864,grey
+Brain only,H3k4me1_merged,0.369318182,0.397727,0.545455,pink
+Brain only,wgEncodeRegTfbsClusteredV3,0.164772727,0.136364,0.25,grey
+Brain only,NCBI_introns_merged,0.482954545,0.420455,0.568182,grey
+Brain only,H3k27me3_H1hesc,0.079545455,0.0625,0.164773,grey
+Brain only,H3k27me3_merged,0.556818182,0.539773,0.6875,grey
+Brain only,hg19_early_timing_PMID19966280,0.329545455,0.323864,0.477273,grey
+Brain only,hg19_late_timing_PMID19966280,0.4375,0.375,0.534091,grey
+Brain only,TOP_2A_2B_PMID28735753_merged,0.096590909,0.0625,0.153409,grey
+Cortex only,H3k27ac_H1hesc,0.16969697,0.175758,0.315152,pink
+Cortex only,H3k4me3_H1hesc,0.018181818,0.0242424,0.0969697,pink
+Cortex only,NCBI_exons_merged,0.03030303,0.0242424,0.0909091,grey
+Cortex only,UCSC_CpG_islands,0,0,0.0424242,pink
+Cortex only,H3k27ac_merged,0.321212121,0.30303,0.448485,grey
+Cortex only,H3k4me3_merged,0.157575758,0.151515,0.272727,grey
+Cortex only,NCBI_gene_merged,0.496969697,0.460606,0.612121,grey
+Cortex only,vista_enhancers,0,0,0.0121212,pink
+Cortex only,H3k4me1_H1hesc,0.187878788,0.151515,0.29697,grey
+Cortex only,wgEncodeRegDnaseClusteredV3,0.23030303,0.193939,0.327273,grey
+Cortex only,H3k4me1_merged,0.381818182,0.4,0.551515,pink
+Cortex only,wgEncodeRegTfbsClusteredV3,0.16969697,0.133333,0.254545,grey
+Cortex only,NCBI_introns_merged,0.472727273,0.418182,0.569697,grey
+Cortex only,H3k27me3_H1hesc,0.078787879,0.0606061,0.163636,grey
+Cortex only,H3k27me3_merged,0.557575758,0.539394,0.684848,grey
+Cortex only,hg19_early_timing_PMID19966280,0.327272727,0.321212,0.478788,grey
+Cortex only,hg19_late_timing_PMID19966280,0.454545455,0.369697,0.533333,grey
+Cortex only,TOP_2A_2B_PMID28735753_merged,0.096969697,0.0606061,0.151515,grey
+Brain Lateralized,H3k27ac_H1hesc,0.169934641,0.176471,0.320261,pink
+Brain Lateralized,H3k4me3_H1hesc,0.019607843,0.0196078,0.0980392,grey
+Brain Lateralized,NCBI_exons_merged,0.026143791,0.0196078,0.0915033,grey
+Brain Lateralized,UCSC_CpG_islands,0,0,0.0392157,pink
+Brain Lateralized,H3k27ac_merged,0.320261438,0.300654,0.45098,grey
+Brain Lateralized,H3k4me3_merged,0.163398693,0.150327,0.27451,grey
+Brain Lateralized,NCBI_gene_merged,0.490196078,0.457516,0.614379,grey
+Brain Lateralized,vista_enhancers,0,0,0.00653595,pink
+Brain Lateralized,H3k4me1_H1hesc,0.202614379,0.150327,0.300654,grey
+Brain Lateralized,wgEncodeRegDnaseClusteredV3,0.235294118,0.189542,0.333333,grey
+Brain Lateralized,H3k4me1_merged,0.405228758,0.392157,0.54902,grey
+Brain Lateralized,wgEncodeRegTfbsClusteredV3,0.176470588,0.130719,0.254902,grey
+Brain Lateralized,NCBI_introns_merged,0.470588235,0.418301,0.575163,grey
+Brain Lateralized,H3k27me3_H1hesc,0.078431373,0.0588235,0.163399,grey
+Brain Lateralized,H3k27me3_merged,0.549019608,0.535948,0.686275,grey
+Brain Lateralized,hg19_early_timing_PMID19966280,0.333333333,0.320261,0.48366,grey
+Brain Lateralized,hg19_late_timing_PMID19966280,0.464052288,0.366013,0.542484,grey
+Brain Lateralized,TOP_2A_2B_PMID28735753_merged,0.098039216,0.0588235,0.156863,grey
+Brain Single Sample,H3k27ac_H1hesc,0.146788991,0.165138,0.330275,pink
+Brain Single Sample,H3k4me3_H1hesc,0.018348624,0.0183486,0.110092,grey
+Brain Single Sample,NCBI_exons_merged,0.009174312,0.0183486,0.100917,pink
+Brain Single Sample,UCSC_CpG_islands,0,0,0.0458716,pink
+Brain Single Sample,H3k27ac_merged,0.311926606,0.284404,0.46789,grey
+Brain Single Sample,H3k4me3_merged,0.183486239,0.137615,0.293578,grey
+Brain Single Sample,NCBI_gene_merged,0.467889908,0.440367,0.633028,grey
+Brain Single Sample,vista_enhancers,0,0,0.00917431,pink
+Brain Single Sample,H3k4me1_H1hesc,0.211009174,0.137615,0.311927,grey
+Brain Single Sample,wgEncodeRegDnaseClusteredV3,0.220183486,0.183486,0.33945,grey
+Brain Single Sample,H3k4me1_merged,0.385321101,0.376147,0.568807,grey
+Brain Single Sample,wgEncodeRegTfbsClusteredV3,0.155963303,0.119266,0.266055,grey
+Brain Single Sample,NCBI_introns_merged,0.458715596,0.40367,0.587156,grey
+Brain Single Sample,H3k27me3_H1hesc,0.082568807,0.0550459,0.183486,grey
+Brain Single Sample,H3k27me3_merged,0.541284404,0.522936,0.706422,grey
+Brain Single Sample,hg19_early_timing_PMID19966280,0.311926606,0.302752,0.504587,grey
+Brain Single Sample,hg19_late_timing_PMID19966280,0.449541284,0.357798,0.559633,grey
+Brain Single Sample,TOP_2A_2B_PMID28735753_merged,0.100917431,0.0550459,0.165138,grey
