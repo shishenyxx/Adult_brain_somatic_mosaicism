@@ -62,4 +62,6 @@ Snp list of your dbsnp file in vcf format (corresponding to your reference genom
 ----------------------------
 
 ## Output:
-The final output bam is in the recaled_bams folder
+The final output bam is in the recaled_bams folder.
+
+
