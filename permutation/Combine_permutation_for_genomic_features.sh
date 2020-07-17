@@ -1,4 +1,12 @@
-#Combination of permutation results
+#number of positive mosaic variants gene region only
+#All Variants 259 #808080
+#Brain and Organs 69 #CCCCCC
+#Brain Only 176 #0B0E50
+#Cortex Only 165 #1F4EC3
+#Brain Lateralized 153 #86BAEC
+#Brain Single Sample 109 #D6F8F8
+
+##Combination of permutation results
 for i in {1..10000};do shuf annotate/${i}.bed|head -n 259|awk -v OFS="\t" '{SUM6+=$6;SUM7+=$7;SUM8+=$8;SUM9+=$9;SUM10+=$10;SUM11+=$11;SUM12+=$12;SUM13+=$13;SUM14+=$14;SUM15+=$15;SUM16+=$16;SUM17+=$17;SUM18+=$18;SUM19+=$19;SUM20+=$20;SUM21+=$21;SUM22+=$22;SUM23+=$23} END {print SUM6/259,SUM7/259,SUM8/259,SUM9/259,SUM10/259,SUM11/259,SUM12/259,SUM13/259,SUM14/259,SUM15/259,SUM16/259,SUM17/259,SUM18/259,SUM19/259,SUM20/259,SUM21/259,SUM22/259,SUM23/259}'>> 4DBSM_All_Variants;done
 
 for i in {1..10000};do shuf annotate/${i}.bed|tail -n 69|awk -v OFS="\t" '{SUM6+=$6;SUM7+=$7;SUM8+=$8;SUM9+=$9;SUM10+=$10;SUM11+=$11;SUM12+=$12;SUM13+=$13;SUM14+=$14;SUM15+=$15;SUM16+=$16;SUM17+=$17;SUM18+=$18;SUM19+=$19;SUM20+=$20;SUM21+=$21;SUM22+=$22;SUM23+=$23} END {print SUM6/69,SUM7/69,SUM8/69,SUM9/69,SUM10/69,SUM11/69,SUM12/69,SUM13/69,SUM14/69,SUM15/69,SUM16/69,SUM17/69,SUM18/69,SUM19/69,SUM20/69,SUM21/69,SUM22/69,SUM23/69}'>> 4DBSM_Brain_and_Organs;done
