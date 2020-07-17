@@ -1,0 +1,2 @@
+#UNIQ_ID	SAMPLE_ID	BAM_PATH
+#ID_for_the_specific_library	ID_for_the_sample_combined_by_different_libraries	PATH_to_Dragen_bams
