@@ -4,6 +4,7 @@ This repository is a collaboration of codes and scripts used in the analysis of 
 
 # 1. Pipelines for the process of whole-genome sequencing data
 ## 1.1 Pipelines for WGS data pre-process, alignment, post-process, and quality control
+[Codes and scripts](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/QC) for WGS quality control.
 ## 1.2 Pipelines for mosaic SNV/indel calling and variant annotations
 
 # 2. Pipelines for the process of Massive Parallel Amplicon Sequencing (MPAS) and single-nuclei MPAS (snMPAS)
