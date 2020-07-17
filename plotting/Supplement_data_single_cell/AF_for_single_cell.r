@@ -1,4 +1,4 @@
-##Supplement data for AF measured in snMPAS
+##Supplement data for AF measured by snMPAS
 library(ggplot2)
 
 raw<-read.csv(file="20200618_4dbsm_mos_259.csv",header=T)
