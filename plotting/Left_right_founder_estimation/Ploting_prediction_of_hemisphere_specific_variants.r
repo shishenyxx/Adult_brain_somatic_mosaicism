@@ -2,6 +2,7 @@
 
 library(ggplot2)
 
+raw<-read.csv(file="left_right_violins.csv",header=T)
 raw2<-raw[raw$Group=="Lower",]
 
 quantile(raw2$Estimated_number,probs=c(0,0.025,0.05,0.95,0.975,1))
