@@ -1,0 +1,229 @@
+configfile: "snake_conf.yaml"
+
+localrules:
+
+
+def read_files():
+    samples = {}
+    with open(config["input_files"], "r") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            uniq_id, sample_id, path = line.rstrip().split("\t")
+            samples[uniq_id] = [sample_id, path]
+    return samples
+
+
+SAMPLES = read_files()
+
+OUT_DIR = config["out_dir"]
+SCRATCH_DIR = config["scratch_dir"]
+TEMP_DIR = config["temp_dir"]
+
+PICARD = config["picard"]
+JAVA = config["java"]
+BWA = config["bwa"]
+SAMTOOLS = config["samtools"]
+GATK = config["gatk"]
+SAMBAMBA = config["sambamba"]
+
+REFERENCE_FASTA = config["hg19_fasta"]
+MILLS = config["mills_indel"]
+GP_1000 = config["gp1000_indel"]
+DB_GAP = config["db_gap"]
+
+
+
+rule all:
+    input:
+        expand([OUT_DIR + "/recaled_bams/{sample}.recaled.bam",
+                OUT_DIR + "/recaled_bams/{sample}.recaled.bai"], sample = SAMPLES.keys())
+
+
+
+rule bam_to_fastq:
+    input:
+        bam = lambda wildcards: SAMPLES[wildcards.sample][1]
+    output:
+        r1 = SCRATCH_DIR + "/fastq/{sample}/{sample}_r1.fq",
+        r2 = SCRATCH_DIR + "/fastq/{sample}/{sample}_r2.fq",
+        unpaired = SCRATCH_DIR + "/fastq/{sample}/{sample}_unpaired.fq",
+    params:
+        memory = "36G", #If the job keeps crashing, specify 64G of memory allocation
+        cluster = "-q glean -l nodes=1:ppn=16,mem=38g -l walltime=499:00:00" #ask for (MEMORY / 4) + 2 processors, change to home if small
+    shell:
+        "{JAVA} -Xmx{params.memory} -jar {PICARD} SamToFastq "
+        "    I={input.bam} "
+        "    F={output.r1} "
+        "    F2={output.r2} "
+        "    FU={output.unpaired} "
+        "    VALIDATION_STRINGENCY=SILENT"
+
+
+
+rule bwa_align:
+    input:
+        r1 = SCRATCH_DIR + "/fastq/{sample}/{sample}_r1.fq",
+        r2 = SCRATCH_DIR + "/fastq/{sample}/{sample}_r2.fq",
+    output:
+        sam = SCRATCH_DIR + "/bwa_sam/{sample}.sam" 
+    params:
+        rg=lambda wildcards:"'@RG"+r'\t'+"ID:" + wildcards.sample +r'\t'+"SM:"+SAMPLES[wildcards.sample][0]+r'\t'+"LB:" + wildcards.sample +r'\t'+"PL:ILLUMINA'",
+        threads = 16,
+        cluster = "-q glean -l nodes=1:ppn=16,mem=38g -l walltime=167:00:00"
+    shell:
+        "{BWA} mem "
+        "    -K 100000000"
+        "    -Y "
+        "    -t {params.threads}"
+        "    -R {params.rg} "
+        "    {REFERENCE_FASTA} "
+        "    {input.r1} "
+        "    {input.r2} "
+        "    >{output.sam}"
+
+
+
+rule sam_to_bam:
+    input:
+        sam = SCRATCH_DIR + "/bwa_sam/{sample}.sam" 
+    output:
+        bam = SCRATCH_DIR + "/bwa_bam/{sample}.bam",
+    params:
+        threads = 16,
+        cluster = "-q glean -l nodes=1:ppn=16,mem=38g -l walltime=167:00:00",
+    shell:
+        "{SAMTOOLS} view -@ {params.threads} -bh -o {output.bam} {input.sam}"
+
+
+rule sort_bam:
+    input:
+        bam = SCRATCH_DIR + "/bwa_bam/{sample}.bam",
+    output:
+        bam = SCRATCH_DIR + "/bwa_sorted/{sample}.sorted.bam",
+        bai = SCRATCH_DIR + "/bwa_sorted/{sample}.sorted.bam.bai",
+    params:
+        threads = 16,
+        cluster = "-q glean -l nodes=1:ppn=16,mem=38g -l walltime=167:00:00",
+    shell:
+        "sleep 60;"
+        "{SAMBAMBA} sort "
+        "    -t {params.threads}"
+        "    {input.bam} "
+        "    -o {output.bam};"
+        "sleep 60;"
+
+
+rule mark_duplication:
+    input:
+        bam = SCRATCH_DIR + "/bwa_sorted/{sample}.sorted.bam",
+        bai = SCRATCH_DIR + "/bwa_sorted/{sample}.sorted.bam.bai",
+    output:
+        bam = SCRATCH_DIR + "/mark_duplication/{sample}.markdup.bam",
+    params:
+        threads = 28,
+        cluster = "-q glean -l nodes=1:ppn=28,mem=126g -l walltime=167:00:00",
+    shell:
+        "sleep 60;"
+        "{SAMBAMBA} markdup -t {params.threads} {input.bam} {output.bam};"
+        "sleep 60;"
+
+
+
+
+rule indel_realignment_step_1:
+    input:
+        bam = SCRATCH_DIR + "/mark_duplication/{sample}.markdup.bam",
+    output:
+        indelrealign_intervals = SCRATCH_DIR + "/target_intervals/{sample}_intervals.list",
+    params:
+        memory = "124G",
+        threads = 28,
+        cluster = "-q glean -l nodes=1:ppn=28,mem=126g -l walltime=255:00:00",
+    shell:
+        "{JAVA} -Xmx{params.memory} "
+        "    -Djava.io.tmpdir={TEMP_DIR} "
+        "    -jar {GATK} "
+        "    -T RealignerTargetCreator "
+        "    -nt {params.threads} "
+        "    -R {REFERENCE_FASTA} "
+        "    -known {MILLS} "
+        "    -known {GP_1000} "
+        "    -I {input.bam} "
+        "    -o {output.indelrealign_intervals} "
+
+
+rule indel_realignment_step_2:
+    input:
+        bam = SCRATCH_DIR + "/mark_duplication/{sample}.markdup.bam",
+        indelrealign_intervals = SCRATCH_DIR + "/target_intervals/{sample}_intervals.list",
+    output:
+        bam = SCRATCH_DIR + "/indel_realignment/{sample}.realigned.bam",
+        bai = SCRATCH_DIR + "/indel_realignment/{sample}.realigned.bai",
+    params:
+        memory = "124G",
+        cluster = "-q glean -l nodes=1:ppn=28,mem=126g -l walltime=255:00:00",
+    shell:
+        "{JAVA} -Xmx{params.memory} "
+        "    -Djava.io.tmpdir={TEMP_DIR} "
+        "    -jar {GATK} "
+        "    -T IndelRealigner "
+        "    -R {REFERENCE_FASTA} " 
+        "    -known {MILLS} "
+        "    -known {GP_1000} "
+        "    -targetIntervals {input.indelrealign_intervals} "
+        "    -I {input.bam} "
+        "    -o {output.bam} "
+
+
+
+
+rule base_recalibration:
+    input:
+        bam = SCRATCH_DIR + "/indel_realignment/{sample}.realigned.bam",
+        bai = SCRATCH_DIR + "/indel_realignment/{sample}.realigned.bai",
+    output:
+        recal_table = OUT_DIR + "/recal_tables/{sample}.recal.table",
+    params:
+        memory = "124G",
+        threads = 28,
+        cluster = "-q glean -l nodes=1:ppn=28,mem=126g -l walltime=167:00:00"
+    shell:
+        "{JAVA} -Xmx{params.memory} "
+        "    -Djava.io.tmpdir={TEMP_DIR} "
+        "    -jar {GATK} "
+        "    -T BaseRecalibrator "
+        "    -nct {params.threads} "
+        "    -R {REFERENCE_FASTA} "
+        "    -knownSites {DB_GAP} "
+        "    -knownSites {MILLS} "
+        "    -knownSites {GP_1000} "
+        "    -I {input.bam} "
+        "    -o {output.recal_table} " 
+
+
+
+rule print_reads:
+    input:
+        bam = SCRATCH_DIR + "/indel_realignment/{sample}.realigned.bam",
+        recal_table = OUT_DIR + "/recal_tables/{sample}.recal.table",
+    output:
+        bam = OUT_DIR + "/recaled_bams/{sample}.recaled.bam",
+        bai = OUT_DIR + "/recaled_bams/{sample}.recaled.bai",
+    params:
+        memory = "124G",
+        threads = 28,
+        cluster = "-q glean -l nodes=1:ppn=28,mem=126g -l walltime=499:00:00"
+    shell:
+        "{JAVA} -Xmx{params.memory} "
+        "    -Djava.io.tmpdir={TEMP_DIR} "
+        "    -jar {GATK} "
+        "    -T PrintReads "
+        "    -nct {params.threads} "
+        "    -R {REFERENCE_FASTA} "
+        "    -BQSR {input.recal_table} "
+        "    -I {input.bam} "
+        "    -o {output.bam} "
+
+
+
