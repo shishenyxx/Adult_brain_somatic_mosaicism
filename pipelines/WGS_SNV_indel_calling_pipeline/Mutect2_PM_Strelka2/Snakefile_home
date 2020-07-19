@@ -1,0 +1,745 @@
+configfile: "snake_conf.yaml"
+
+localrules: all, vcf_list_mutect, generate_mutect_avinput, generate_mutect_bed, \
+            summarize_mutect, split_mutect_avinput, mutect_gather_tumor_ci_results, \
+            mutect_gather_homopolyer_results, mutect_gather_normal_ci_results, \
+            generate_strelka_avinput, generate_strelka_bed, summarize_strelka, split_strelka_avinput,\
+            strelka_gather_tumor_ci_results, strelka_gather_homopolymer_results, \
+            strelka_gather_normal_ci_results, strelka_merge_results,
+
+
+N_INTERVALS = config['n_intervals']
+INTERVALS = ["%04d" % x for x in range(N_INTERVALS)]
+
+MUTECT_SPLITS = ["%02d" % x for x in range(90)]
+STRELKA_SPLITS = ["%02d" % x for x in range(20)]
+
+OUT_DIR = config['out_dir']
+SCRATCH_DIR = config['scratch_dir']
+
+BED_FILE = config['bed_file']
+REF = config['ref_fasta']
+GNOMAD_AF = config['gnomad_af']
+#GNOMAD = config['gnomad']
+UCSC_RPMSK = config['ucsc_rpmsk']
+
+GATK4 = config['gatk4']
+
+STRELKA = config['strelka_path']
+PYTHON2 = config["python2"]
+JAVA = config["java"]
+
+ANNOVAR = config["annovar"]
+ANNOVAR_DB = config["annovar_db"]
+
+REPEAT_MASKER = config["repeat_masker"]
+SEGDUP = config["segdup"]
+
+HOMOPOLYMER_SCRIPT = config["homopolymer_script"]
+CI_SCRIPT = config["ci_script"]
+SUMMERIZE_SCRIPT = config["summerize_script"]
+
+HEADER = ["#ID", "CHROM", "POS", "REF", "ALT", "ANNO", "GENE", "GNOMAD_FREQ", \
+          "REPEAT_MASKER", "SEGDUP", "HOMOPOLYMER", "REF_SEQ", "DINUCLEOTIDE", \
+          "NEAR_INDEL", "UCSC_RPMSK", "REF_COUNT", "ALT_COUNT", "MAF", "LOWER_CI",\
+          "UPPER_CI", "CI_IS_GREATER", "NORMAL_REF_COUNT", "NORMAL_ALT_COUNT", \
+          "NORMAL_MAF", "NORMAL_LOWER_CI", "NORMAL_UPPER_CI", "NORMAL_CI_IS_GREATER", \
+          "TUMOR_IS_BLOOD", "TUMOR_IS_SPERM"]
+
+
+
+import pandas as pd
+import numpy as np
+import sys, os
+
+
+def make_input_dicts():
+    f = open(config['input_files'], "r")
+
+    tumor_dict = {}
+    normal_dict = {}
+    germline_dict = {}
+
+    for line in f:
+        if line.startswith("#"):
+            continue
+        words = line.rstrip().split("\t")
+        print(words)
+        sample_id = words[0]
+        tumor_id = words[1]
+        normal_id = words[2]
+        tumor_path = words[3]
+        normal_path = words[4]
+        germline_vcf_path = words[5]
+      
+        tumor_dict[sample_id] = [tumor_id, tumor_path]
+        normal_dict[sample_id] = [normal_id, normal_path]
+        germline_dict[sample_id] = germline_vcf_path
+    f.close()
+    return tumor_dict, normal_dict, germline_dict
+
+
+TUMOR_DICT, NORMAL_DICT, GERMLINE_DICT = make_input_dicts()
+
+
+
+
+rule all:
+    input:
+        OUT_DIR + "/final_mutect_summary.vcf",
+        OUT_DIR + "/final_strelka_summary.vcf",
+              
+
+#split bed file to the designated number of intervals 
+rule get_intervals:
+    input:
+        BED_FILE
+    output:
+        expand(SCRATCH_DIR + "/intervals/{interval}-scattered.intervals", interval=INTERVALS)
+    params:
+        cluster = "-q home -l nodes=1:ppn=4 -l walltime=24:00:00",
+        out_dir = SCRATCH_DIR + "/intervals/"
+    shell:
+        "{JAVA} -Xmx12G -jar {GATK4} SplitIntervals "
+        "    -R {REF} "
+        "    -L {input} "
+        "    --scatter-count {N_INTERVALS} "
+        "    -O {params.out_dir}; "
+        "sleep 60;"
+
+#convert each interval file into bed format
+rule convert_intervals_to_bed:
+    input:
+        interval = SCRATCH_DIR + "/intervals/{interval}-scattered.intervals"
+    output:
+        bed = SCRATCH_DIR + "/intervals_bed/{interval}.bed.gz",
+        tbi = SCRATCH_DIR + "/intervals_bed/{interval}.bed.gz.tbi"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        r"""
+        grep -v '@' {input.interval} | awk 'BEGIN {{OFS="\t"}} {{print $1,$2-1,$3}}' | bgzip > {output.bed};
+        """
+        "tabix -p bed {output.bed};"
+
+#run mutect2 on each interval
+rule run_mutect2:
+    input:
+        tumor = lambda wildcards: TUMOR_DICT[wildcards.sample][1],
+        normal = lambda wildcards: NORMAL_DICT[wildcards.sample][1],
+        ref = REF,
+        intervals = SCRATCH_DIR + "/intervals/{interval}-scattered.intervals"
+    output:
+        SCRATCH_DIR + "/mutect_analysis/{sample}/{interval}_somatic.vcf.gz"
+    params:
+        cluster = "-q home -l walltime=24:00:00 -l nodes=1:ppn=8",
+        tumor_id = lambda wildcards: TUMOR_DICT[wildcards.sample][0],
+        normal_id = lambda wildcards: NORMAL_DICT[wildcards.sample][0]
+    benchmark:
+        OUT_DIR + "/benchmarks/mutect2/{sample}/{interval}_mutect2.txt"
+    shell:
+        "{JAVA} -Xmx24G -jar {GATK4} "
+        "    Mutect2 "
+        "    -R {input.ref} "
+        "    -I {input.tumor} "
+        "    -I {input.normal} "
+        "    -tumor {params.tumor_id} "
+        "    -normal {params.normal_id} "
+        "    --af-of-alleles-not-in-resource 0.00003125 "
+        "    -L {input.intervals} "
+        "    -O {output} "
+        "    --germline-resource {GNOMAD_AF} "
+
+
+#put the paths to all intervals in a file for each sample
+rule vcf_list_mutect:
+    input:
+        expand(SCRATCH_DIR + "/mutect_analysis/{{sample}}/{interval}_somatic.vcf.gz",
+                   interval=INTERVALS)
+    output:
+        SCRATCH_DIR + "/mutect_vcf_list/{sample}_vcf.list"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        f = open(output[0], "w")
+        for path in input:
+            f.write(path + "\n")
+        f.close()
+
+#merge the interval files together for each sample
+rule gather_vcfs_mutect:
+    input:
+        SCRATCH_DIR + "/mutect_vcf_list/{sample}_vcf.list"
+    output:
+        vcf = OUT_DIR + "/mutect_vcf/{sample}_somatic.vcf.gz",
+        tbi = OUT_DIR + "/mutect_vcf/{sample}_somatic.vcf.gz.tbi"
+    params:
+        cluster = "-q home -l nodes=1:ppn=8 -l walltime=24:00:00",
+    shell:
+        "{JAVA} -Xmx24G -jar {GATK4} "
+        "    GatherVcfs "
+        "    -I {input} "
+        "    -O {output.vcf}; "
+        "tabix -p vcf {output.vcf}"
+
+#generate mutect annotation
+rule filter_mutect:
+    input:
+        OUT_DIR + "/mutect_vcf/{sample}_somatic.vcf.gz"
+    output:
+        OUT_DIR + "/mutect_filter_vcf/{sample}_somatic.vcf.gz"
+    params:
+        cluster = "-q home -l nodes=2:ppn=4 -l walltime=24:00:00"
+    shell:
+        "{JAVA} -Xmx28G -jar {GATK4} "
+        "    FilterMutectCalls "
+        "    -V {input} "
+        "    -O {output} "
+
+
+#run strelka2
+rule run_strelka:
+    input:
+        tumor = lambda wildcards: TUMOR_DICT[wildcards.sample][1],
+        normal = lambda wildcards: NORMAL_DICT[wildcards.sample][1],
+        ref = REF,
+        bed = SCRATCH_DIR + "/intervals_bed/{interval}.bed.gz"
+    output:
+        SCRATCH_DIR + "/strelka_analysis/{sample}/{interval}/results/"\
+          "variants/somatic.indels.vcf.gz",
+        SCRATCH_DIR + "/strelka_analysis/{sample}/{interval}/results/"\
+          "variants/somatic.snvs.vcf.gz"
+    benchmark:
+        OUT_DIR + "/benchmarks/strelka/{sample}/{interval}_strelka.txt"
+    params:
+        cluster = "-q home -l nodes=1:ppn=4 -l walltime=24:00:00",
+        run_dir = SCRATCH_DIR + "/strelka_analysis/{sample}/{interval}"
+    shell:
+        "{PYTHON2} {STRELKA} "
+        "    --tumorBam={input.tumor} "
+        "    --normalBam={input.normal} "
+        "    --referenceFasta={input.ref} "
+        "    --callRegions={input.bed} "
+        "    --runDir {params.run_dir};"
+        "{PYTHON2} "
+        "    {params.run_dir}/runWorkflow.py "
+        "    --mode local "
+        "    -j 4 "
+        "    --quiet"
+
+#put all paths together in a file for each sample
+rule vcf_list_strelka:
+    input:
+        expand(SCRATCH_DIR + "/strelka_analysis/{{sample}}/{interval}/results/"\
+          "variants/somatic.indels.vcf.gz", interval=INTERVALS),
+        expand(SCRATCH_DIR + "/strelka_analysis/{{sample}}/{interval}/results/"\
+          "variants/somatic.snvs.vcf.gz", interval=INTERVALS)
+    output:
+        SCRATCH_DIR + "/strelka_vcf_list/{sample}_vcf.list"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        f = open(output[0], "w")
+        for path in input:
+            f.write(path + "\n")
+        f.close()
+
+#merge all interval vcfs together for each sample
+rule merge_vcfs_strelka:
+    input:
+        SCRATCH_DIR + "/strelka_vcf_list/{sample}_vcf.list"
+    output:
+        vcf = OUT_DIR + "/strelka_vcf/{sample}_somatic.vcf.gz",
+        tbi = OUT_DIR + "/strelka_vcf/{sample}_somatic.vcf.gz.tbi"
+    params:
+        cluster = "-q home -l nodes=2:ppn=4 -l walltime=24:00:00",
+    shell:
+        "{JAVA} -Xmx28G -jar {GATK4} "
+        "    MergeVcfs "        
+        "    -I {input} "
+        "    -O {output.vcf};"
+
+
+#generate 1-based avinput
+rule generate_mutect_avinput:
+    input:
+        vcf = OUT_DIR + "/mutect_filter_vcf/{sample}_somatic.vcf.gz",
+    output:
+        avinput = OUT_DIR + "/mutect_avintput/{sample}.avinput",
+    shell:
+        """ zcat {input.vcf} | grep -v "##" | grep "PASS" |  """
+        """ awk -v OFS="\\t" "\$5!~/,/ {{print \$1, \$2, \$2+length(\$4)-1, \$4, \$5}}"  """
+        """ >> {output.avinput} """
+
+
+#generate 0-based bed file
+rule generate_mutect_bed:
+    input:
+        vcf = OUT_DIR + "/mutect_filter_vcf/{sample}_somatic.vcf.gz",
+    output:
+        bed = OUT_DIR + "/mutect_bed/{sample}.bed",
+    shell:
+        """ zcat {input.vcf} | grep -v "##" | grep "PASS" |  """
+        """ awk -v OFS="\\t" "\$5!~/,/ {{print \$1, \$2-1, \$2+length(\$4)-2, \$4, \$5}}"  """
+        """ >> {output.bed} """
+
+
+
+#split avinput to smaller files
+rule split_mutect_avinput:
+    input:
+        avinput = OUT_DIR + "/mutect_avintput/{sample}.avinput",
+    output:
+        expand(SCRATCH_DIR + "/mutect_split_avinput/{{sample}}/{msplit}", msplit = MUTECT_SPLITS)
+    params:
+        outdir = SCRATCH_DIR + "/mutect_split_avinput/{sample}/"
+    shell:
+        """ split -d -l $(wc -l {input}|awk "{{print int((\$1+90-1)/90)}}") {input} {params.outdir} """
+
+#use Renee's package to process these entries
+rule mutect_check_homopolymer_dinucleotide_nearindel_rpmsk:
+    input:
+        vcf = SCRATCH_DIR + "/mutect_split_avinput/{sample}/{msplit}",
+        germline_vcf = lambda wildcards: GERMLINE_DICT[wildcards.sample],
+    output:
+        outfile = SCRATCH_DIR + "/mutect_split_annotation/{sample}/{msplit}.homopolymer_dinucleotide_nearindel_rpmsk"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "python {HOMOPOLYMER_SCRIPT}"
+        "    {input.vcf}"
+        "    {input.germline_vcf}"
+        "    {UCSC_RPMSK}"
+        "    {output.outfile}"
+
+#compute ci for this sample
+rule mutect_compute_tumor_MAF_and_CI:
+    input:
+        tumor_bam = lambda wildcards: TUMOR_DICT[wildcards.sample][1],
+        vcf = SCRATCH_DIR + "/mutect_split_avinput/{sample}/{msplit}",
+    output:
+        outfile = SCRATCH_DIR + "/mutect_split_annotation/{sample}/{msplit}.tumor_maf_ci",
+    params:
+        outdir = SCRATCH_DIR + "/mutect_split_annotation/{sample}/{msplit}_tumor_samtools_output/",
+        cluster = "-q home -l walltime=24:00:00",
+    shell:
+        "python {CI_SCRIPT}"
+        "    {input.tumor_bam}"
+        "    {input.vcf}"
+        "    {params.outdir}"
+        "    {output.outfile}"
+
+#compute ci for the corresponding normal sample
+rule mutect_compute_normal_MAF_and_CI:
+    input:
+        normal_bam = lambda wildcards: NORMAL_DICT[wildcards.sample][1],
+        vcf = SCRATCH_DIR + "/mutect_split_avinput/{sample}/{msplit}",
+    output:
+        outfile = SCRATCH_DIR + "/mutect_split_annotation/{sample}/{msplit}.normal_maf_ci",
+    params:
+        outdir = SCRATCH_DIR + "/mutect_split_annotation/{sample}/{msplit}_normal_samtools_output/",
+        cluster = "-q home -l walltime=24:00:00",
+    shell:
+        "python {CI_SCRIPT}"
+        "    {input.normal_bam}"
+        "    {input.vcf}"
+        "    {params.outdir}"
+        "    {output.outfile}"
+
+
+#gather results for homopolymer, dinucleotide, near_indeal, and rpmsk together
+rule mutect_gather_homopolyer_results:
+    input:
+        expand(SCRATCH_DIR + "/mutect_split_annotation/{{sample}}/{msplit}.homopolymer_dinucleotide_nearindel_rpmsk", msplit=MUTECT_SPLITS)
+    output:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}.homopolymer_dinucleotide_nearindel_rpmsk",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        print(output.outfile)
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    wfile.write(line)
+        wfile.close()
+
+
+#gather ci results for tumor sample
+rule mutect_gather_tumor_ci_results:
+    input:
+        expand(SCRATCH_DIR + "/mutect_split_annotation/{{sample}}/{msplit}.tumor_maf_ci", msplit=MUTECT_SPLITS)
+    output:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}.tumor_maf_ci",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+#gather ci results for normal sample
+rule mutect_gather_normal_ci_results:
+    input:
+        expand(SCRATCH_DIR + "/mutect_split_annotation/{{sample}}/{msplit}.normal_maf_ci", msplit=MUTECT_SPLITS)
+    output:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}.normal_maf_ci",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+#get annovar annotation
+rule mutect_annovar_geneanno:
+    input:
+        avinput = OUT_DIR + "/mutect_avintput/{sample}.avinput",
+    output:
+        vcf = OUT_DIR + "/mutect_annotation/{sample}/{sample}.variant_function",
+        exonic_vf = OUT_DIR + "/mutect_annotation/{sample}/{sample}.exonic_variant_function",
+    params:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}",
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "{ANNOVAR} -geneanno"
+        "    -build hg19"
+        "    -dbtype refGene"
+        "    {input.avinput}"
+        "    {ANNOVAR_DB}"
+        "    -outfile {params.outfile}"
+
+#get gnomad annotation
+rule mutect_annovar_gnomad:
+    input:
+        avinput = OUT_DIR + "/mutect_avintput/{sample}.avinput",
+    output:
+        dropped = OUT_DIR + "/mutect_annotation/{sample}/{sample}.hg19_gnomad_genome_dropped",
+        filtered = OUT_DIR + "/mutect_annotation/{sample}/{sample}.hg19_gnomad_genome_filtered",
+    params:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}",
+        cluster = "-q home -l walltime=24:00:00",
+    shell:
+        "{ANNOVAR} -filter"
+        "    -build hg19"
+        "    -dbtype gnomad_genome"
+        "    {input.avinput}"
+        "    {ANNOVAR_DB}"
+        "    -outfile {params.outfile}"
+
+
+rule mutect_check_repeats:
+    input:
+        bed = OUT_DIR + "/mutect_bed/{sample}.bed",
+    output:
+        outfile = OUT_DIR + "/mutect_annotation/{sample}/{sample}.repeats_annotation",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "module load bedtools;"
+        "bedtools annotate"
+        "    -i {input.bed}"
+        "    -files {REPEAT_MASKER} {SEGDUP}"
+        ">>{output.outfile};"
+
+
+rule summarize_mutect:
+    input:
+        exon_vf = OUT_DIR + "/mutect_annotation/{sample}/{sample}.exonic_variant_function",
+        vf = OUT_DIR + "/mutect_annotation/{sample}/{sample}.variant_function",
+        gnomad_dropped = OUT_DIR + "/mutect_annotation/{sample}/{sample}.hg19_gnomad_genome_dropped",
+        repeats = OUT_DIR + "/mutect_annotation/{sample}/{sample}.repeats_annotation",
+        homopolymer = OUT_DIR + "/mutect_annotation/{sample}/{sample}.homopolymer_dinucleotide_nearindel_rpmsk",
+        tumor_ci = OUT_DIR + "/mutect_annotation/{sample}/{sample}.tumor_maf_ci",
+        normal_ci = OUT_DIR + "/mutect_annotation/{sample}/{sample}.normal_maf_ci"
+    output:
+        outfile = OUT_DIR + "/mutect_results/{sample}.vcf"
+    params:
+        tumor_id = lambda wildcards: TUMOR_DICT[wildcards.sample][0],
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "python {SUMMERIZE_SCRIPT}"
+        "       {params.tumor_id}"
+        "       {input.exon_vf}"
+        "       {input.vf}"
+        "       {input.gnomad_dropped}"
+        "       {input.repeats}"
+        "       {input.homopolymer}"
+        "       {input.tumor_ci}"
+        "       {input.normal_ci}"
+        "       {output.outfile}"
+
+
+rule mutect_merge_results:
+    input:
+        expand(OUT_DIR + "/mutect_results/{sample}.vcf", sample=TUMOR_DICT.keys())
+    output:
+        outfile = OUT_DIR + "/final_mutect_summary.vcf",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        wfile.write("\t".join(HEADER) + "\n")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+
+
+#generate 1-based avinput
+rule generate_strelka_avinput:
+    input:
+        vcf = OUT_DIR + "/strelka_vcf/{sample}_somatic.vcf.gz",
+    output:
+        avinput = OUT_DIR + "/strelka_avintput/{sample}.avinput",
+    shell:
+        """ zcat {input.vcf} | grep -v "##" | grep "PASS" |  """
+        """ awk -v OFS="\\t" "\$5!~/,/ {{print \$1, \$2, \$2+length(\$4)-1, \$4, \$5}}"  """
+        """ >> {output.avinput} """
+
+
+
+#generate 0-based bed file
+rule generate_strelka_bed:
+    input:
+        vcf = OUT_DIR + "/strelka_vcf/{sample}_somatic.vcf.gz",
+    output:
+        bed = OUT_DIR + "/strelka_bed/{sample}.bed",
+    shell:
+        """ zcat {input.vcf} | grep -v "##" | grep "PASS" |  """
+        """ awk -v OFS="\\t" "\$5!~/,/ {{print \$1, \$2-1, \$2+length(\$4)-2, \$4, \$5}}"  """
+        """ >> {output.bed} """
+
+rule split_strelka_avinput:
+    input:
+        avinput = OUT_DIR + "/strelka_avintput/{sample}.avinput",
+    output:
+        expand(SCRATCH_DIR + "/strelka_split_avinput/{{sample}}/{ssplit}", ssplit=STRELKA_SPLITS)
+    params:
+        outdir = SCRATCH_DIR + "/strelka_split_avinput/{sample}/"
+    shell:
+        """ split -d -l $(wc -l {input}|awk "{{print int((\$1+10-1)/10)}}") {input} {params.outdir} """
+
+
+rule strelka_check_homopolymer_dinucleotide_nearindel_rpmsk:
+    input:
+        vcf = SCRATCH_DIR + "/strelka_split_avinput/{sample}/{ssplit}",
+        germline_vcf = lambda wildcards: GERMLINE_DICT[wildcards.sample],
+    output:
+        outfile = SCRATCH_DIR + "/strelka_split_annotation/{sample}/{ssplit}.homopolymer_dinucleotide_nearindel_rpmsk"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "python {HOMOPOLYMER_SCRIPT}"
+        "    {input.vcf}"
+        "    {input.germline_vcf}"
+        "    {UCSC_RPMSK}"
+        "    {output.outfile}"
+
+
+rule strelka_compute_tumor_MAF_and_CI:
+    input:
+        bam = lambda wildcards: TUMOR_DICT[wildcards.sample][1],
+        vcf = SCRATCH_DIR + "/strelka_split_avinput/{sample}/{ssplit}",
+    output:
+        outfile = SCRATCH_DIR + "/strelka_split_annotation/{sample}/{ssplit}.tumor_maf_ci",
+    params:
+        outdir = SCRATCH_DIR + "/strelka_split_annotation/{sample}/{ssplit}_tumor_samtools_output/",
+        cluster = "-q home -l walltime=24:00:00",
+    shell:
+        "python {CI_SCRIPT}"
+        "    {input.bam}"
+        "    {input.vcf}"
+        "    {params.outdir}"
+        "    {output.outfile};"
+
+
+rule strelka_compute_normal_MAF_and_CI:
+    input:
+        bam = lambda wildcards: NORMAL_DICT[wildcards.sample][1],
+        vcf = SCRATCH_DIR + "/strelka_split_avinput/{sample}/{ssplit}",
+    output:
+        outfile = SCRATCH_DIR + "/strelka_split_annotation/{sample}/{ssplit}.normal_maf_ci",
+    params:
+        outdir = SCRATCH_DIR + "/strelka_split_annotation/{sample}/{ssplit}_normal_samtools_output/",
+        cluster = "-q home -l walltime=24:00:00",
+    shell:
+        "python {CI_SCRIPT}"
+        "    {input.bam}"
+        "    {input.vcf}"
+        "    {params.outdir}"
+        "    {output.outfile};"
+
+
+rule strelka_gather_homopolymer_results:
+    input:
+        expand(SCRATCH_DIR + "/strelka_split_annotation/{{sample}}/{ssplit}.homopolymer_dinucleotide_nearindel_rpmsk", ssplit=STRELKA_SPLITS)
+    output:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}.homopolymer_dinucleotide_nearindel_rpmsk"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    wfile.write(line)
+        wfile.close()
+
+
+rule strelka_gather_tumor_ci_results:
+    input:
+        expand(SCRATCH_DIR + "/strelka_split_annotation/{{sample}}/{ssplit}.tumor_maf_ci", ssplit=STRELKA_SPLITS)
+    output:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}.tumor_maf_ci"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+
+
+rule strelka_gather_normal_ci_results:
+    input:
+        expand(SCRATCH_DIR + "/strelka_split_annotation/{{sample}}/{ssplit}.normal_maf_ci", ssplit=STRELKA_SPLITS)
+    output:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}.normal_maf_ci"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+
+rule strelka_annovar_geneanno:
+    input:
+        avinput = OUT_DIR + "/strelka_avintput/{sample}.avinput",
+    output:
+        vf = OUT_DIR + "/strelka_annotation/{sample}/{sample}.variant_function",
+        exonic_vf = OUT_DIR + "/strelka_annotation/{sample}/{sample}.exonic_variant_function",
+    params:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}",
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "{ANNOVAR} -geneanno"
+        "    -build hg19"
+        "    -dbtype refGene"
+        "    {input.avinput}"
+        "    {ANNOVAR_DB}"
+        "    -outfile {params.outfile}"
+
+
+rule strelka_annovar_gnomad:
+    input:
+        avinput = OUT_DIR + "/strelka_avintput/{sample}.avinput",
+    output:
+        dropped = OUT_DIR + "/strelka_annotation/{sample}/{sample}.hg19_gnomad_genome_dropped",
+        filtered = OUT_DIR + "/strelka_annotation/{sample}/{sample}.hg19_gnomad_genome_filtered",
+    params:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}",
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "{ANNOVAR} -filter"
+        "    -build hg19"
+        "    -dbtype gnomad_genome"
+        "    {input.avinput}"
+        "    {ANNOVAR_DB}"
+        "    -outfile {params.outfile}"
+
+
+rule strelka_check_repeats:
+    input:
+        bed = OUT_DIR + "/strelka_bed/{sample}.bed",
+    output:
+        outfile = OUT_DIR + "/strelka_annotation/{sample}/{sample}.repeats_annotation",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "module load bedtools;"
+        "bedtools annotate"
+        "    -i {input.bed}"
+        "    -files {REPEAT_MASKER} {SEGDUP}"
+        ">>{output.outfile};"
+
+
+rule summarize_strelka:
+    input:
+        exon_vf = OUT_DIR + "/strelka_annotation/{sample}/{sample}.exonic_variant_function",
+        vf = OUT_DIR + "/strelka_annotation/{sample}/{sample}.variant_function",
+        gnomad_dropped = OUT_DIR + "/strelka_annotation/{sample}/{sample}.hg19_gnomad_genome_dropped",
+        repeats = OUT_DIR + "/strelka_annotation/{sample}/{sample}.repeats_annotation",
+        homopolymer = OUT_DIR + "/strelka_annotation/{sample}/{sample}.homopolymer_dinucleotide_nearindel_rpmsk",
+        tumor_ci = OUT_DIR + "/strelka_annotation/{sample}/{sample}.tumor_maf_ci",
+        normal_ci = OUT_DIR + "/strelka_annotation/{sample}/{sample}.normal_maf_ci",
+    output:
+        outfile = OUT_DIR + "/strelka_results/{sample}.vcf"
+    params:
+        tumor_id = lambda wildcards: TUMOR_DICT[wildcards.sample][0],
+        cluster = "-q home -l walltime=24:00:00"
+    shell:
+        "python {SUMMERIZE_SCRIPT}"
+        "       {params.tumor_id}"
+        "       {input.exon_vf}"
+        "       {input.vf}"
+        "       {input.gnomad_dropped}"
+        "       {input.repeats}"
+        "       {input.homopolymer}"
+        "       {input.tumor_ci}"
+        "       {input.normal_ci}"
+        "       {output.outfile}"
+
+
+rule strelka_merge_results:
+    input:
+        expand(OUT_DIR + "/strelka_results/{sample}.vcf", sample=TUMOR_DICT.keys())
+    output:
+        outfile = OUT_DIR + "/final_strelka_summary.vcf",
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        wfile = open(output.outfile, "w")
+        wfile.write("\t".join(HEADER) + "\n")
+        for file in input:
+            print(file)
+            with open(file, "r") as f:
+                for line in f:
+                    if line.startswith("#"):
+                        continue
+                    wfile.write(line)
+        wfile.close()
+
+
