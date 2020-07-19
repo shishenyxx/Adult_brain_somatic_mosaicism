@@ -9,8 +9,10 @@ This repository is a collaboration of codes and scripts used in the analysis of 
 [Pipelines](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/pipelines/WGS_processing_pipeline) for converting the Dragen bam into fastqs, mapping them with new parameters to GRCh37, and finish the indel re-alignment as well as base quality score recalibration.
 
 [Codes and scripts](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/QC) for WGS quality control.
+
 #### 1.2 Pipelines for mosaic SNV/indel calling and variant annotations
 [Pipelines](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/pipelines/WGS_SNV_indel_calling_pipeline/Mutect2_PM_Strelka2) for MuTect2(paired mode) and Strelka2 (somatic mode) variant calling from WGS data
+
 -----------------------------------
 
 ### 2. Pipelines for the process of Massive Parallel Amplicon Sequencing (MPAS) and single-nuclei MPAS (snMPAS)
