@@ -1,0 +1,2 @@
+#sample	tumor	normal	tumor_path	normal_path	vcf_path
+#sampleID	tumor_sample_ID_in_bam	normal_sample_ID_in_bam	tumor_bam_path	normal_bam_path	haplocaller_gvcf_path
