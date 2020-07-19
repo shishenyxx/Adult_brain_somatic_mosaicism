@@ -1,4 +1,4 @@
-# Snakemake pipeline for MuTect2(paired mode) and Strelka2 (somatic mode) variant calling from WGS data
+# Snakemake pipeline for MuTect2 (paired mode) and Strelka2 (somatic mode) variant calling from WGS data
 
 The pipeline is re-implemented and re-wrote by Xin Xu and Xiaoxu Yang, with great help form Martin Breuss, based on a previous version written by Renee D. George, and is maintained by Xin Xu and Xiaoxu Yang.
 
