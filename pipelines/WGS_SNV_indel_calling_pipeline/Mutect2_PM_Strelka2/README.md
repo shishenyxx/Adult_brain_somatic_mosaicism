@@ -7,8 +7,8 @@ The pipeline takes a list of paired samples as input, detects mosaic variants an
 ----------------------------
 
 ## Before start, make sure you have:
-#### [Strelka](https://github.com/Illumina/strelka)
-#### [GATK](https://github.com/broadinstitute/gatk/releases)
+#### [Strelka2](https://github.com/Illumina/strelka)
+#### [Mutect2 from GATK4](https://github.com/broadinstitute/gatk/releases)
 #### [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/)
 #### [BEDTools](https://bedtools.readthedocs.io/en/latest/index.html)
 #### add the [lib](https://github.com/shishenyxx/PASM/tree/master/Snakemake_pipeline/lib) folder to your $PYTHONPATH
