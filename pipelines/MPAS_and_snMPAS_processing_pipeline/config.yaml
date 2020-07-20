@@ -21,39 +21,39 @@ interval_list : "./wgs_nochr.bed"
 
 #OUTPUT SPACE DEFINITION
 #DATA WILL BE SAVED TO <output_dir>/<project>/
-output_dir : "/projects/ps-gleesonlab5/somatic_mosaicism/amplicon/2020_04_21_amplicon_validation-4DBSM/Validation-4DBSM-sorted-fraction-and-everything"
+output_dir : "output_dir"
 
 #SOFTWARE USED
-samtools : "/home/chl618/chl/tools/anaconda/bin/samtools"
-bcftools : "/home/chl618/chl/tools/anaconda/bin/bcftools"
-picard : "/home/chl618/chl/tools/anaconda/bin/picard"
-bwa : "/home/chl618/chl/tools/anaconda/bin/bwa"
-gatk : "/home/chl618/chl/tools/gatk3.8/GenomeAnalysisTK.jar"
+samtools : "/bin/samtools"
+bcftools : "/bin/bcftools"
+picard : "/bin/picard"
+bwa : "/bin/bwa"
+gatk : "/gatk3.8/GenomeAnalysisTK.jar"
 
 #SCRATCH SPACE DEFINITION
 #DATA WILL BE SAVED TO <scratch_dir>/<project>/
-scratch_dir : "/projects/ps-gleesonlab5/somatic_mosaicism/amplicon/2020_04_07_amplicon_validation-FCD-AmpliSeq_DeepMosaic_REACH/scratch"
+scratch_dir : "/scratch"
 
 #CHAIN FILES:
-Hg38ToHg19 : "/home/chl618/chl/references/chain/hg38_to_hg19.chain"
-Hg19ToHg38 : "/home/chl618/chl/references/chain/hg19_to_hg38.chain"
-GRCh37ToHg38 : "/home/chl618/chl/references/chain/GRCh37_to_hg38.chain"
+Hg38ToHg19 : "references/chain/hg38_to_hg19.chain"
+Hg19ToHg38 : "references/chain/hg19_to_hg38.chain"
+GRCh37ToHg38 : "references/chain/GRCh37_to_hg38.chain"
 
 #REFERENCE FILES
 GRCH37 : 
-    reference : "/projects/ps-gleesonlab5/gleeson1/resources/GRCh37_plus_decoy/hs37d5.fa"
-    dbsnp : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/dbsnp_138.b37.vcf"
-    indel_mills : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/Mills_and_1000G_gold_standard.indels.b37.sites.vcf"
-    indel_1000g : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/1000G_phase1.indels.b37.vcf"
-    hapmap : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/hapmap_3.3.b37.sites.vcf"
-    omni : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/1000G_omni2.5.b37.sites.vcf"
-    snp_1000g : "/projects/ps-gleesonlab5/gleeson1/resources/gatk_bundle/1000G_phase1.snps.high_confidence.b37.sites.vcf"
+    reference : "resources/GRCh37_plus_decoy/hs37d5.fa"
+    dbsnp : "resources/gatk_bundle/dbsnp_138.b37.vcf"
+    indel_mills : "resources/gatk_bundle/Mills_and_1000G_gold_standard.indels.b37.sites.vcf"
+    indel_1000g : "resources/gatk_bundle/1000G_phase1.indels.b37.vcf"
+    hapmap : "resources/gatk_bundle/hapmap_3.3.b37.sites.vcf"
+    omni : "resources/gatk_bundle/1000G_omni2.5.b37.sites.vcf"
+    snp_1000g : "resources/gatk_bundle/1000G_phase1.snps.high_confidence.b37.sites.vcf"
 HG38 :
-    reference : "/projects/ps-gleesonlab5/gleeson1/resources/hg38.fa"
-    dbsnp : "/projects/ps-gleesonlab3/lil067/references/hg38/dbsnp_146.hg38.vcf.gz"
-    indel_mills : "/projects/ps-gleesonlab3/lil067/references/hg38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"
-    indel_1000g : "/projects/ps-gleesonlab5/gleeson1/resources/hg38bundle/Homo_sapiens_assembly38.known_indels.vcf.gz"
-    hapmap : "/projects/ps-gleesonlab3/lil067/references/hg38/hapmap_3.3.hg38.vcf.gz"
-    omni : "/projects/ps-gleesonlab3/lil067/references/hg38/1000G_omni2.5.hg38.vcf.gz"
-    snp_1000g : "/projects/ps-gleesonlab3/lil067/references/hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz"
-    pop_file : "/projects/ps-gleesonlab3/lil067/references/hg38/hapmap_3.3_grch38_pop_stratified_af.vcf.gz"
+    reference : "resources/hg38.fa"
+    dbsnp : "references/hg38/dbsnp_146.hg38.vcf.gz"
+    indel_mills : "references/hg38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"
+    indel_1000g : "resources/hg38bundle/Homo_sapiens_assembly38.known_indels.vcf.gz"
+    hapmap : "references/hg38/hapmap_3.3.hg38.vcf.gz"
+    omni : "references/hg38/1000G_omni2.5.hg38.vcf.gz"
+    snp_1000g : "references/hg38/1000G_phase1.snps.high_confidence.hg38.vcf.gz"
+    pop_file : "references/hg38/hapmap_3.3_grch38_pop_stratified_af.vcf.gz"
