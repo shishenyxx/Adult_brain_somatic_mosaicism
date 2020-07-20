@@ -7,7 +7,7 @@ The pipeline takes a list of bam samples and vcf files from MuTect2 single mode 
 
 ## Before start, make sure you have:
 #### [MosaicForecast](https://github.com/parklab/MosaicForecast)
-#### pandas and numpy for python
+#### [pandas](https://pandas.pydata.org/) and [NumPy](https://numpy.org/) for Python
 
 ----------------------------
 
