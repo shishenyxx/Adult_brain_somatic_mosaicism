@@ -1,0 +1,617 @@
+configfile: "config.yaml"
+
+#project name
+project=config["project"]
+
+#user email
+email=config["email"]
+
+#software used
+samtools=config["samtools"]
+bcftools=config["bcftools"]
+picard=config["picard"]
+bwa=config["bwa"]
+gatk=config["gatk"]
+
+#directory used
+scratch_dir=config["scratch_dir"]+"/"+project
+output_dir=config["output_dir"]+"/"+project
+
+#version of reference
+version=config["version"]
+
+#bed file used
+interval_list=config["interval_list"]
+
+#reference used
+reference=config[version]["reference"]
+reference_prefix=".".join(reference.split(".")[:-1])
+
+#sample type
+sample_type=config["sample_type"]
+
+#read in samples
+import os
+import pandas
+samples=pandas.read_table(config["sample_list"], sep="\t", header=None, index_col=0)
+samples.index=samples.index.astype(str)
+if sample_type == "paired-end fastq":
+	samples.columns=["r1", "r2"]
+else:
+	samples.columns=["r1"]
+
+def get_fastqs(wildcards):
+	if sample_type == "paired-end fastq":
+		return samples.loc[wildcards.sample, ["r1", "r2"]]
+	elif sample_type == "single-end fastq":
+		return samples.loc[wildcards.sample, "r1"]
+	else:
+		return [output_dir+"/fastqs/"+wildcards.sample+"_r1.fq.gz", 
+				output_dir+"/fastqs/"+wildcards.sample+"_r2.fq.gz"]
+def get_bam(wildcards):
+	return samples.loc[wildcards.sample, "r1"]
+
+#Run on local machine
+localrules: all, generate_gvcf_list, split_vcf
+
+onsuccess:
+	shell("echo '{project} finished' | mail -s 'snakemake message' {email}")
+onerror:
+	shell("echo 'an error occurred in {project}' | mail -s 'snakemake message' {email}")
+
+
+rule all:
+	input:
+		reference+".fai",
+		reference+".bwt",
+		reference_prefix+".dict",
+		expand([
+			output_dir+"/recaled_bams/{sample}.recaled.bam", 
+			output_dir+"/recaled_bams/{sample}.recaled.bai",
+			#output_dir+"/gvcfs/{sample}.g.vcf.gz",
+			#output_dir+"/vcfs/{sample}.hg19.vcf.gz", 
+		], sample = samples.index),
+		#output_dir+"/joint_vcfs/"+project+".vcf.gz",
+		output_dir+"/genotype.vcf.gz"
+
+
+#Generate metadata files for tools, make sure to have write permission
+rule generate_metadata:
+	input:
+		reference
+	output:
+		reference+".fai",
+		reference+".bwt",
+		reference_prefix+".dict"
+	benchmark:
+		output_dir+"/benchmarks/generate_metadata/"
+	log:
+		output_dir+"/logs/generate_metadata/generate_metadata.out",
+		output_dir+"/logs/generate_metadata/generate_metadata.err"
+	shell:
+		"{bwa} index -a bwtsw {reference};"
+		"{samtools} faidx {reference};"
+		"{picard} CreateSequenceDictionary REFERENCE={reference}"
+
+
+#Bam -> Fastq
+rule sep_bam:
+	input:
+		bam=get_bam
+	output:
+		r1=temp(scratch_dir+"/{sample}/{sample}_r1.bam"),
+		r2=temp(scratch_dir+"/{sample}/{sample}_r2.bam")
+	priority: 9
+	benchmark:
+		output_dir+"/benchmarks/sep_bam/{sample}.txt"
+	log:
+		output_dir+"/logs/sep_bam/{sample}.out",
+		output_dir+"/logs/sep_bam/{sample}.err"
+	shell:
+		"{samtools} view -b -f 64 {input.bam} -o {output.r1};"
+		"{samtools} view -b -f 128 {input.bam} -o {output.r2}"
+
+
+rule bam2fq:
+	input:
+		r1=scratch_dir+"/{sample}/{sample}_r1.bam",
+		r2=scratch_dir+"/{sample}/{sample}_r2.bam"
+	output:
+		r1=output_dir+"/fastqs/{sample}_r1.fq.gz",
+		r2=output_dir+"/fastqs/{sample}_r2.fq.gz"
+	priority: 8
+	benchmark:
+		output_dir+"/benchmarks/bam2fq/{sample}.txt"
+	log:
+		output_dir+"/logs/bam2fq/{sample}.out",
+		output_dir+"/logs/bam2fq/{sample}.err"
+	shell:
+		"{samtools} collate -uO {input.r1} | {samtools} fastq -O - | gzip > {output.r1};"
+		"{samtools} collate -uO {input.r2} | {samtools} fastq -O - | gzip > {output.r2};"
+
+
+#Fastq -> Bam
+rule bwa:
+	input:
+		fastqs=get_fastqs
+	output:
+		sam=temp(scratch_dir+"/{sample}/{sample}.sam")
+	params:
+		rg="'@RG"+r'\t'+"ID:{sample}"+r'\t'+"SM:{sample}"+r'\t'+"LB:{sample}"+r'\t'+"PL:ILLUMINA'",
+		threads=6
+	priority: 7
+	benchmark:
+		output_dir+"/benchmarks/bwa/{sample}.txt"
+	log:
+		output_dir+"/logs/bwa/{sample}.out",
+		output_dir+"/logs/bwa/{sample}.err"
+	shell:
+		"{bwa} mem"
+		" -t {params.threads}"
+		" -M "
+		" -R {params.rg}"
+		" {reference}"
+		" {input}"
+		" > {output.sam}"
+
+
+rule sort:
+	input:
+		sam=scratch_dir+"/{sample}/{sample}.sam",
+	output:
+		bam=temp(scratch_dir+"/{sample}/{sample}.sorted.bam"),
+		bai=temp(scratch_dir+"/{sample}/{sample}.sorted.bai")
+	params:
+		tmp=scratch_dir+"/{sample}/{sample}.sort",
+		mem=10
+	priority: 6
+	benchmark:
+		output_dir+"/benchmarks/sort/{sample}.txt"
+	log:
+		output_dir+"/logs/sort/{sample}.out",
+		output_dir+"/logs/sort/{sample}.err"
+	shell:
+		"{picard} -Xmx{params.mem}G SortSam "
+		" INPUT={input.sam}"
+		" OUTPUT={output.bam}"
+		" SORT_ORDER=coordinate"
+		" VALIDATION_STRINGENCY=LENIENT"
+		" CREATE_INDEX=true"
+		" MAX_RECORDS_IN_RAM=2500000"
+		" TMP_DIR={params.tmp};"
+		"rm -r {params.tmp}"
+
+
+rule mark_duplicates:
+	input:
+		bam=scratch_dir+"/{sample}/{sample}.sorted.bam",
+		bai=scratch_dir+"/{sample}/{sample}.sorted.bai"
+	output:
+		bam=temp(scratch_dir+"/{sample}/{sample}.markdup.bam"),
+		bai=temp(scratch_dir+"/{sample}/{sample}.markdup.bai"),
+		metrics=output_dir+"/qc/mark_duplicates/{sample}.metrics.txt"
+	params:
+		tmp=scratch_dir+"/{sample}/{sample}.markdup",
+		mem=10
+	priority: 5
+	benchmark:
+		output_dir+"/benchmarks/mark_duplicates/{sample}.txt"
+	log:
+		output_dir+"/logs/mark_duplicates/{sample}.out",
+		output_dir+"/logs/mark_duplicates/{sample}.err"
+	shell:
+		"{picard} -Xmx{params.mem}G MarkDuplicates"
+		" INPUT={input.bam}"
+		" OUTPUT={output.bam}"
+		" METRICS_FILE={output.metrics}"
+		" CREATE_INDEX=true"
+		" VALIDATION_STRINGENCY=LENIENT"
+		" MAX_RECORDS_IN_RAM=2500000"
+		" TMP_DIR={params.tmp};"
+		"rm -r {params.tmp}"
+
+
+rule fix_mate_info:
+	input:
+		bam=scratch_dir+"/{sample}/{sample}.sorted.bam",
+		bai=scratch_dir+"/{sample}/{sample}.sorted.bai"
+	output:
+		bam=temp(scratch_dir+"/{sample}/{sample}.fixed.bam"),
+		bai=temp(scratch_dir+"/{sample}/{sample}.fixed.bai")
+	params:
+		tmp=scratch_dir+"/{sample}/{sample}.fixmate",
+		mem=10
+	priority: 4
+	benchmark:
+		output_dir+"/benchmarks/fix_mate_info/{sample}.txt"
+	log:
+		output_dir+"/logs/fix_mate_info/{sample}.out",
+		output_dir+"/logs/fix_mate_info/{sample}.err"
+	shell:
+		"{picard} -Xmx{params.mem}G FixMateInformation"
+		" INPUT={input.bam}"
+		" OUTPUT={output.bam}"
+		" SORT_ORDER=coordinate"
+		" VALIDATION_STRINGENCY=LENIENT"
+		" CREATE_INDEX=true"
+		" MAX_RECORDS_IN_RAM=2500000"
+		" TMP_DIR={params.tmp};"
+		"rm -r {params.tmp}"
+
+
+#No longer required for haplotype assembly in gatk4
+rule indel_realignment:
+	input:
+		bam=scratch_dir+"/{sample}/{sample}.fixed.bam",
+		bai=scratch_dir+"/{sample}/{sample}.fixed.bai"
+	output:
+		bam=temp(scratch_dir+"/{sample}/{sample}.realigned.bam"),
+		bai=temp(scratch_dir+"/{sample}/{sample}.realigned.bai"),
+		list=temp(scratch_dir+"/{sample}/indel_target_intervals.list")
+	params:
+		mills=config[version]["indel_mills"],
+		indel_1000g=config[version]["indel_1000g"],
+		mem=10
+	priority: 3
+	benchmark:
+		output_dir+"/benchmarks/indel_realignment/{sample}.txt"
+	log:
+		output_dir+"/logs/indel_realignment/{sample}.out",
+		output_dir+"/logs/indel_realignment/{sample}.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" RealignerTargetCreator"
+		" -R {reference}"
+		" -I {input.bam}"
+		" -known {params.mills}"
+		" -known {params.indel_1000g}"
+		" -o {output.list};"
+
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" IndelRealigner"
+		" -R {reference}"
+		" -I {input.bam}"
+		" -targetIntervals {output.list}"
+		" -known {params.mills}"
+		" -known {params.indel_1000g}"
+		" -o {output.bam}"
+
+
+rule base_recalibration:
+	input:
+		bam=scratch_dir+"/{sample}/{sample}.realigned.bam",
+		bai=scratch_dir+"/{sample}/{sample}.realigned.bai"
+	output:
+		bam=output_dir+"/recaled_bams/{sample}.recaled.bam",
+		bai=output_dir+"/recaled_bams/{sample}.recaled.bai",
+		table=output_dir+"/qc/base_recal/{sample}.recal.table"
+	params:
+		dbsnp=config[version]["dbsnp"],
+		mills=config[version]["indel_mills"],
+		indel_1000g=config[version]["indel_1000g"],
+		threads=8,
+		mem=30
+	priority: 2
+	benchmark:
+		output_dir+"/benchmarks/base_recalibration/{sample}.txt"
+	log:
+		output_dir+"/logs/base_recalibration/{sample}.out",
+		output_dir+"/logs/base_recalibration/{sample}.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" BaseRecalibrator"
+		" -nct {params.threads}"
+		" -R {reference}"
+		" -I {input.bam}"
+		" -knownSites {params.dbsnp}"
+		" -knownSites {params.mills}"
+		" -knownSites {params.indel_1000g}"
+		" -o {output.table};"
+		#"-O {output.recal_table};"
+
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" PrintReads"
+		" -nct {params.threads}"
+		" -allowPotentiallyMisencodedQuals"
+		" -R {reference}"
+		" -I {input.bam}"
+		" -BQSR {output.table}"
+		" -o {output.bam}"
+		#" -O {output.bam}"
+
+
+#Bam -> Gvcf
+rule haplotype_caller:
+	input:
+		bam=output_dir+"/recaled_bams/{sample}.recaled.bam",
+		bai=output_dir+"/recaled_bams/{sample}.recaled.bai"
+	output:
+		gvcf=output_dir+"/gvcfs/{sample}.g.vcf.gz"
+	params:
+		dbsnp=config[version]["dbsnp"],
+		mem=10
+	priority: 1
+	benchmark:
+		output_dir+"/benchmarks/haplotype_caller/{sample}.txt"
+	log:
+		output_dir+"/logs/haplotype_caller/{sample}.out",
+		output_dir+"/logs/haplotype_caller/{sample}.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" HaplotypeCaller"
+		" -R {reference}"
+		" -I {input.bam}"
+		" -L {interval_list}"
+		" -D {params.dbsnp}"
+		" --emitRefConfidence GVCF"
+		" -o {output.gvcf}"
+		#" -O {output.gvcf}"
+
+
+#Gvcf -> Vcf
+rule generate_gvcf_list:
+	input:
+		expand(output_dir+"/gvcfs/{sample}.g.vcf.gz", sample=samples.index)
+	output:
+		#output_dir+"/database.map"
+		list=scratch_dir+"/gvcf.list"
+	run:
+		#sample_list = sorted(samples.keys())
+		#gvcf_paths = sorted(input)
+		#with open(str(output), 'w') as f:
+			#for i in range(len(sample_list)):
+				#f.write("%s\t%s\n" % (sample_list[i], gvcf_paths[i]))
+		import os
+		for i in input:
+			os.system("readlink -f {i} >> {output}".format(i=i, output=output))
+
+
+#Switched to GenomicsDBImport in gatk4
+rule combine_gvcf:
+	input:
+		list=scratch_dir+"/gvcf.list"
+	output:
+		gvcf=temp(scratch_dir+"/combined_gvcfs/combined.g.vcf.gz")
+	params:
+		mem=36
+	benchmark:
+		output_dir+"/benchmarks/combine_gvcf/combine_gvcf.txt"
+	log:
+		output_dir+"/logs/combine_gvcf/combine_gvcf.out",
+		output_dir+"/logs/combine_gvcf/combine_gvcf.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" CombineGVCFs"
+		" -R {reference}"
+		" -V {input.list}"
+		" -o {output.gvcf};"
+		#" -O {output.gvcf};"
+
+
+rule import_genomicsDB:
+	input:
+		map=scratch_dir+"/database.map"
+	output:
+		json=scratch_dir+"/database/genomicsdb_array/genomicsdb_meta.json"
+	params:
+		min_mem=8,
+		max_mem=30
+	benchmark:
+		output_dir+"/benchmarks/import_genomicsDB/import_genomicsDB.txt"
+	log:
+		output_dir+"/logs/import_genomicsDB/import_genomicsDB.out",
+		output_dir+"/logs/import_genomicsDB/import_genomicsDB.err"
+	shell:
+		"{gatk} --java-options '-Xmx{params.max_mem}G -Xms{params.min_mem}G'"
+		" GenomicsDBImport"
+		" -R {reference}"
+		" -L {interval_list}"
+		" --sample-name-map {input.map}"
+		" --genomicsdb-workspace-path {output_dir}/database"
+
+		
+rule joint_genotype_gvcf:
+	input:
+		#json=scratch_dir+"/database/genomicsdb_array/genomicsdb_meta.json"
+		gvcf=scratch_dir+"/combined_gvcfs/combined.g.vcf.gz"
+	output:
+		vcf=output_dir+"/genotype.vcf.gz"
+	params:
+		dbsnp=config[version]["dbsnp"],
+		threads=8,
+		mem=30
+	benchmark:
+		output_dir+"/benchmarks/joint_genotype_gvcf/joint_genotype_gvcf.txt"
+	log:
+		output_dir+"/logs/joint_genotype_gvcf/joint_genotype_gvcf.out",
+		output_dir+"/logs/joint_genotype_gvcf/joint_genotype_gvcf.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" GenotypeGVCFs"
+		" -R {reference}"
+		" -V {input.gvcf}"
+		" -nt {params.threads}"
+		" -D {params.dbsnp}"
+		" -o {output.vcf}"
+		#" -O {output.vcf}"
+
+
+rule vcf_snp_recalibration:
+	input:
+		vcf=output_dir+"/genotype.vcf.gz"
+	output:
+		recal=temp(scratch_dir+"/genotype.snp.recal"),
+		tranches=temp(scratch_dir+"/genotype.snp.tranches"),
+		rscript=temp(scratch_dir+"/genotype.snp.plots.R"),
+		vcf=temp(scratch_dir+"/genotype.recal_snp.vcf.gz")
+	params:
+		hapmap=config[version]["hapmap"],
+		omni=config[version]["omni"],
+		snp_1000g=config[version]["snp_1000g"],
+		dbsnp=config[version]["dbsnp"],
+		threads=8,
+		mem=30
+	benchmark:
+		output_dir+"/benchmarks/vcf_snp_recalibration/vcf_snp_recalibration.txt"
+	log:
+		output_dir+"/logs/vcf_snp_recalibration/vcf_snp_recalibration.out",
+		output_dir+"/logs/vcf_snp_recalibration/vcf_snp_recalibration.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" VariantRecalibrator"
+		" -R {reference}"
+		#" -V {input.vcf}"
+		" -input {input.vcf}"
+		" --resource:hapmap,known=false,training=true,truth=true,prior=15.0"
+		" {params.hapmap}"
+		" --resource:omni,known=false,training=true,truth=true,prior=12.0"
+		" {params.omni}"
+		" --resource:1000G,known=false,training=true,truth=false,prior=10.0"
+		" {params.snp_1000g}"
+		" --resource:dbsnp,known=true,training=false,truth=false,prior=2.0"
+		" {params.dbsnp}"
+		" -an QD"
+		" -an FS"
+		" -an SOR"
+		" -an MQ"
+		" -an MQRankSum"
+		" -an ReadPosRankSum"
+		" -mode SNP"
+		" -tranche 100.0"
+		" -tranche 99.9"
+		" -tranche 99.5"
+		" -tranche 99.0"
+		" -tranche 90.0"
+		" -recalFile {output.recal}"
+		" -tranchesFile {output.tranches}"
+		" -rscriptFile {output.rscript}"
+		" -nt {params.threads};"
+
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		#" ApplyVQSR"
+		" ApplyRecalibration"
+		" -R {reference}"
+		#" -V {input.vcf}"
+		" -input {input.vcf}"
+		" --ts_filter_level 99.5"
+		" -tranchesFile {output.tranches}"
+		" -recalFile {output.recal}"
+		" -mode SNP"
+		" -nt {params.threads}"
+		" -o {output.vcf}"
+		#" -O {output.vcf}"
+
+
+rule vcf_indel_recalibration:
+	input:
+		vcf=scratch_dir+"/genotype.recal_snp.vcf.gz"
+	output:
+		recal=temp(scratch_dir+"/genotype.indel.recal"),
+		tranches=temp(scratch_dir+"/genotype.indel.tranches"),
+		rscript=temp(scratch_dir+"/genotype.indel.plots.R"),
+		vcf=output_dir+"/joint_vcfs/"+project+".vcf.gz"
+	params:
+		mills=config[version]["indel_mills"],
+		dbsnp=config[version]["dbsnp"],
+		threads=8,
+		mem=30
+	benchmark:
+		output_dir+"/benchmarks/vcf_indel_recalibration/vcf_indel_recalibration.txt"
+	log:
+		output_dir+"/logs/vcf_indel_recalibration/vcf_indel_recalibration.out",
+		output_dir+"/logs/vcf_indel_recalibration/vcf_indel_recalibration.err"
+	shell:
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" VariantRecalibrator"
+		" -R {reference}"
+		#" -V {input.vcf}"
+		" -input {input.vcf}"
+		" --resource:mills,known=true,training=true,truth=true,prior=12.0"
+		" {params.mills}"
+		" --resource:dbsnp,known=true,training=false,truth=false,prior=2.0"
+		" {params.dbsnp}"
+		" -an QD"
+		" -an FS"
+		" -an SOR"
+		" -an MQRankSum"
+		" -an ReadPosRankSum"
+		" -mode INDEL"
+		" -tranche 100.0"
+		" -tranche 99.9"
+		" -tranche 99.5"
+		" -tranche 99.0"
+		" -tranche 90.0"
+		" -recalFile {output.recal}"
+		" -tranchesFile {output.tranches}"
+		" -rscriptFile {output.rscript}"
+		" -nt {params.threads};"
+
+		#"{gatk} --java-options '-Xmx{params.mem}G'"
+		"java -Xmx{params.mem}G -jar {gatk} -T"
+		" ApplyRecalibration"
+		" -R {reference}"
+		#" -V {input.vcf}"
+		" -input {input.vcf}"
+		" -mode INDEL"
+		" --ts_filter_level 99.0"
+		" -recalFile {output.recal}"
+		" -tranchesFile {output.tranches}"
+		" -nt {params.threads}"
+		" -o {output.vcf}"
+		#" -O {output.vcf}"
+
+
+#Run CrossMap to liftover the version of reference genome
+rule liftover_vcf:
+	input:
+		vcf=output_dir+"/joint_vcfs/"+project+".vcf.gz",
+		chain=config["Hg38ToHg19"],
+		ref=config["GRCH37"]["reference"]
+	output:
+		vcf=output_dir+"/joint_vcfs/"+project+".hg19.vcf.gz",
+		unmap=output_dir+"/joint_vcfs/"+project+".hg19.unmap.vcf.gz"
+	params:
+		tmp=scratch_dir+"/liftover",
+		mem=30
+	benchmark:
+		output_dir+"/benchmarks/liftover/liftover.txt"
+	log:
+		output_dir+"/logs/liftover/liftover.out",
+		output_dir+"/logs/liftover/liftover.err"
+	shell:
+		"{picard} -Xmx{params.mem}G LiftoverVcf"
+		" I={input.vcf}"
+		" O={output.vcf}"
+		" CHAIN={input.chain}"
+		" REJECT={output.unmap}"
+		" R={input.ref}"
+		" MAX_RECORDS_IN_RAM=500000"
+		" TMP_DIR={params.tmp};"
+		"rm -r {params.tmp}"
+
+
+#WES required to upload to Varvis, split into individual vcfs
+rule split_vcf:
+	input:
+		vcf=output_dir+"/joint_vcfs/"+project+".hg19.vcf.gz"
+	output:
+		vcf=output_dir+"/vcfs/{sample}.hg19.vcf.gz"
+	benchmark:
+		output_dir+"/benchmarks/split_vcf/{sample}.txt"
+	log:
+		output_dir+"/logs/split_vcf/{sample}.out",
+		output_dir+"/logs/split_vcf/{sample}.err"
+	shell:
+		"{bcftools} view -s {wildcards.sample} -c 1 -O z -o {output.vcf} {input.vcf}; "
+		"sleep 5; "
+		"/home/chl618/chl/scripts/fix-duplicate-ref-allele.sh {output}"
