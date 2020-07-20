@@ -11,6 +11,7 @@ The pipeline takes a list of paired samples as input, detects mosaic variants an
 #### [Mutect2 from GATK4](https://github.com/broadinstitute/gatk/releases)
 #### [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/)
 #### [BEDTools](https://bedtools.readthedocs.io/en/latest/index.html)
+#### [pandas](https://pandas.pydata.org/) and [NumPy](https://numpy.org/) for Python
 #### add the [lib](https://github.com/shishenyxx/PASM/tree/master/Snakemake_pipeline/lib) folder to your $PYTHONPATH
 #### Be sure you have Python2 on your server.
 ----------------------------
