@@ -1,0 +1,30 @@
+__default__ :
+    account : "jogleeson-group"
+    queue : "home"
+    job : "{wildcards.sample}.{rule}"
+    nodes : "1"
+    ppn : "24"
+    walltime : "8:00:00"
+    email : "{email}"
+    email_options : "a"
+    output : "{log[0]}"
+    error : "{log[1]}"
+combine_gvcf :
+    job : "{rule}"
+    ppn : "24"
+    walltime : "8:00:00"
+import_genomicsDB :
+    job : "{rule}"
+    ppn : "24"
+    walltime : "8:00:00"
+joint_genotype_gvcf :
+    job : "{rule}"
+vcf_snp_recalibration :
+    job : "{rule}"
+    walltime : "4:00:00"
+vcf_indel_recalibration:
+    job : "{rule}"
+    walltime : "4:00:00"
+liftover_vcf :
+    job : "{rule}"
+    walltime : "4:00:00"
