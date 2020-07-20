@@ -1,0 +1,28 @@
+#!/bin/csh
+#PBS -q hotel
+#PBS -N ${SAMPLE}_WGS
+#PBS -l nodes=2:ppn=12
+#PBS -l pmem=4gb
+#PBS -l walltime=160:00:00
+#PBS -o MosaicHunter/${SAMPLE}.stdout
+#PBS -e MosaicHunter/${SAMPLE}.stderr
+#PBS -V
+#PBS -m abe
+
+module load blat
+
+cd /projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicHunter
+
+##single_mode_whole_genome_MosaicHunter
+/bin/java -Xmx44G -Xms44G -jar MosaicHunter/build/mosaichunter.jar\
+ -C /home/xiy010/tools/MosaicHunter/conf/300X_genome_b37_ctrl_cohort_2018_11_29.properties\
+ -P input_file=/projects/ps-gleesonlab6/4dbsm/jun_2019/merged/${SAMPLE}.bam\
+ -P reference_file=references/GRCh37_plus_decoy/hs37d5.fa\
+ -P mosaic_filter.dbsnp_file=dbsnp_137.b37.tsv.gz\
+ -P mosaic_filter.mode=single\
+ -P mosaic_filter.sex=F\
+ -P indel_region_filter.bed_file=sorted_again_full_repeats.b37.bed\
+ -P common_site_filter.bed_file=MosaicHunter/resources/WGS.error_prone.b37.bed\
+ -P repetitive_region_filter.bed_file=MosaicHunter/resources/all_repeats.b37.bed\
+ -P output_dir=MosaicHunter/${SAMPLE}\
+ > MosaicHunter/${SAMPLE}.MosaicHunter.single.log
