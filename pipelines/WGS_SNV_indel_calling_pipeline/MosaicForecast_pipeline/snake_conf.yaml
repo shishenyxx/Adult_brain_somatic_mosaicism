@@ -1,10 +1,10 @@
-input_files : "/projects/ps-gleesonlab5/user/xiy010/analysis/2018-09-02-control-cohort/2018-12-20-control-cohort-all/8-Mutect2_single_mode/2019-09-08-MosaicForecast/input_files.txt"
-out_dir : "/projects/ps-gleesonlab5/user/xiy010/analysis/2018-09-02-control-cohort/2018-12-20-control-cohort-all/8-Mutect2_single_mode/2019-09-08-MosaicForecast"
-scratch_dir : "/oasis/tscc/scratch/gchai/mosaicforcast"
+input_files : "input_files.txt"
+out_dir : "MosaicForecast"
+scratch_dir : "MosaicForecast/scratch"
 
 read_length : 150
-ref_fasta : "/projects/ps-gleesonlab3/lil067/references/GRCh37_plus_decoy/hs37d5.fa"
-mosaicforecast : "/home/xiy010/tools/MosaicForecast"
-umap : "/projects/ps-gleesonlab5/user/xiy010/analysis/2019_08_13_check_pm5bp/MosaicForecast_analysis/hg19/k24.umap.wg.bw"
+ref_fasta : "references/GRCh37_plus_decoy/hs37d5.fa"
+mosaicforecast : "MosaicForecast"
+umap : "MosaicForecast_analysis/hg19/k24.umap.wg.bw"
 
-model_trained : "/home/xiy010/tools/MosaicForecast/models_trained/200xRFmodel_addRMSK_Refine.rds"
+model_trained : "MosaicForecast/models_trained/200xRFmodel_addRMSK_Refine.rds"
