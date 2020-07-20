@@ -1,0 +1,2 @@
+#ID GROUP BAM_PATH
+ID_of_the_bam normal_or_tumor	path_to_the_bam
