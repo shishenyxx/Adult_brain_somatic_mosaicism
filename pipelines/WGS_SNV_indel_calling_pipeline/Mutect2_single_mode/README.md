@@ -7,7 +7,7 @@ The pipeline takes a list of samples assigned with "tumor" or "normal" (panel of
 ----------------------------
 
 ## Before start, make sure you have:
-#### [Mutect2 from GATK4](https://github.com/broadinstitute/gatk/releases)
+#### [GATK4](https://github.com/broadinstitute/gatk/releases)
 #### [Java](https://java.com/en/download/help/linux_x64_install.xml)
 
 ----------------------------
