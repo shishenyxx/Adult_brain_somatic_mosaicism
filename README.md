@@ -21,6 +21,8 @@ PBS script for [MosaicHunter single mode](https://github.com/shishenyxx/Adult_br
 
 ### 2. Pipelines for the process of Massive Parallel Amplicon Sequencing (MPAS) and single-nuclei MPAS (snMPAS)
 #### 2.1 Pipelines for MPAS data alignment and processing
+[Pipelines](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/pipelines/MPAS_and_snMPAS_processing_pipeline) for alignment, processing, and germline variant calling of MPAS and snMPAS reads.
+
 #### 2.2 Pipelines for AF quantification and variant annotations
 [Pipelines](https://github.com/shishenyxx/PASM/tree/master/Snakemake_pipeline) for AF quantification and variant anntations.
 
