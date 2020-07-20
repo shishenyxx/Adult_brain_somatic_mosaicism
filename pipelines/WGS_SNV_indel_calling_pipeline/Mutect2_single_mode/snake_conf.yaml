@@ -1,11 +1,11 @@
 n_intervals: 1000
 
-input_files : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/Mutect2_SingleMode/input_files.txt"
-out_dir : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/Mutect2_SingleMode"
-scratch_dir : "/oasis/tscc/scratch/xiy010/mutect2_single_mode/7614"
+input_files : "input_files.txt"
+out_dir : "Mutect2_SingleMode"
+scratch_dir : "Mutect2_SingleMode/scratch"
 
-gatk4 : "/projects/ps-gleesonlab3/rdg/src/gatk-4.0.4.0/gatk-package-4.0.4.0-local.jar"
-java : "/projects/ps-gleesonlab3/rdg/src/jdk1.8.0_144/bin/java"
-ref_fasta : "/projects/ps-gleesonlab3/lil067/references/GRCh37_plus_decoy/hs37d5.fa"
-bed_file : "/projects/ps-gleesonlab3/rdg/genomes/hg19/bed_files/wgs_nochr.bed"
-gnomad : "/projects/ps-gleesonlab3/rdg/genomes/hg19/af-only-gnomad.raw.sites.b37.vcf.gz"
+gatk4 : "/src/gatk-4.0.4.0/gatk-package-4.0.4.0-local.jar"
+java : "/src/jdk1.8.0_144/bin/java"
+ref_fasta : "/references/GRCh37_plus_decoy/hs37d5.fa"
+bed_file : "/bed_files/wgs_nochr.bed"
+gnomad : "/genomes/hg19/af-only-gnomad.raw.sites.b37.vcf.gz"
