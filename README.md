@@ -38,4 +38,5 @@ Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mos
 #### 3.3 Pipelines for sorted population, the QC of sorting
 #### 3.4 Pipelines for further analysis
 
-Umap clustering for variants and sequenced samples
+UMAP clustering for variants and sequenced samples
+#### 4. [UMAP Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) 
