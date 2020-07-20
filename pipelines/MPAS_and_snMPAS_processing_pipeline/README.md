@@ -1,6 +1,6 @@
 # Snakemake pipeline for alignment and germline heterozygous variant calling from MPAS and snMPAS data
 
-The pipeline is maintained by Xiaoxu Yang, Renee George, and Chen li
+The pipeline is maintained by Chen li, Xiaoxu Yang, and Renee George 
 
 ----------------------------
 
