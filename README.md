@@ -17,6 +17,8 @@ Pipelines for [MuTect2 single mode](https://github.com/shishenyxx/Adult_brain_so
 
 PBS script for [MosaicHunter single mode](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/pipelines/WGS_SNV_indel_calling_pipeline/MosaicHunter_single_mode_pipeline), followed by the [variant annotation pipeline](https://github.com/shishenyxx/PASM/tree/master/Snakemake_pipeline).
 
+After variant calling from different strategies, variants were annotated and filtered by [a python script](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/pipelines/WGS_SNV_indel_calling_pipeline/Mosaic_variant_determinations.py) and positive mosaic variants as well as the corresponding tissue and additional information were annotated.
+
 -----------------------------------
 
 ### 2. Pipelines for the process of Massive Parallel Amplicon Sequencing (MPAS) and single-nuclei MPAS (snMPAS)
