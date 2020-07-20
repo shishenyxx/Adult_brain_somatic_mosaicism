@@ -1,0 +1,244 @@
+configfile: "snake_conf.yaml"
+
+INTERVALS = ["%04d" % x for x in range(config["n_intervals"])]
+
+def read_samples():
+    f = open(config['input_files'], "r")
+    normals = {}
+    tumors = {}
+    for line in f:
+       if line.startswith("#"):
+          continue
+       sample_id, label, bam_path = line.rstrip().split("\t")
+       if label == "normal":
+           normals[sample_id] = bam_path
+       if label == "tumor":
+           tumors[sample_id] = bam_path
+    f.close()
+    return normals, tumors
+
+NORMALS, TUMORS = read_samples()
+print(NORMALS)
+print(TUMORS)
+
+
+N_INTERVALS = config['n_intervals']
+INTERVALS = ["%04d" % x for x in range(N_INTERVALS)]
+
+
+OUT_DIR = config['out_dir']
+SCRATCH_DIR = config['scratch_dir']
+
+REF_FASTA = config['ref_fasta']
+BED_FILE = config['bed_file']
+
+JAVA = config["java"]
+GATK4 = config['gatk4']
+GNOMAD = config['gnomad']
+
+
+
+rule all:
+    input:
+        #expand(SCRATCH_DIR + "/single_mode/{tumor}_somatic.vcf.gz", tumor=TUMORS),
+        #expand(SCRATCH_DIR + "/single_mode/{tumor}_somatic.vcf.gz.tbi", tumor=TUMORS)
+        expand(SCRATCH_DIR + "/passed_single_mode/{tumor}_somatic.vcf.gz", tumor=TUMORS)
+
+
+rule get_intervals:
+    input:
+        BED_FILE
+    output:
+        expand(SCRATCH_DIR + "/intervals/{interval}-scattered.intervals", interval=INTERVALS)
+    params:
+        cluster = "-q hotel -l walltime=24:00:00",
+        out_dir = SCRATCH_DIR + "/intervals/"
+    shell:
+        "{JAVA} -Xmx8G -jar {GATK4} "
+        "    SplitIntervals "
+        "    -R {REF_FASTA} "
+        "    -L {input} "
+        "    --scatter-count {N_INTERVALS} "
+        "    -O {params.out_dir}; "
+
+
+rule convert_intervals_to_bed:
+    input:
+        SCRATCH_DIR + "/intervals/{interval}-scattered.intervals"
+    output:
+        bed = SCRATCH_DIR + "/intervals_bed/{interval}.bed.gz",
+        tbi = SCRATCH_DIR + "/intervals_bed/{interval}.bed.gz.tbi"
+    params:
+        cluster = "-q condo -l walltime=8:00:00"
+    shell:
+        r"""
+        grep -v '@' {input} | awk 'BEGIN {{OFS="\t"}} {{print $1,$2-1,$3}}' | bgzip > {output.bed};
+        """
+        "tabix -p bed {output.bed};"
+
+
+rule run_mutect2_normal_only:
+    input:
+        normal = lambda wildcards: NORMALS[wildcards.normal],
+        intervals = SCRATCH_DIR + "/intervals/{interval}-scattered.intervals"
+    output:
+        SCRATCH_DIR + "/normal_intervals_pon/{normal}/{interval}_for_pon.vcf.gz"
+    params:
+        cluster = "-q condo -M 'xiy010@ucsd.edu' -l nodes=1:ppn=8 -l walltime=8:00:00",
+    benchmark:
+        OUT_DIR + "/benchmarks/normal_intervals_pon/{normal}/{interval}.txt"
+    shell:
+        "{JAVA} -Xmx24G -jar {GATK4} "
+        "    Mutect2 "
+        "    -R {REF_FASTA} "
+        "    -I {input.normal} "
+        "    -tumor {wildcards.normal} "
+        "    --germline-resource {GNOMAD} "
+        "    -L {input.intervals} "
+        "    -O {output} "
+
+
+rule generate_normal_only_list:
+    input:
+        expand(SCRATCH_DIR + "/normal_intervals_pon/{{normal}}/{interval}_for_pon.vcf.gz", interval=INTERVALS)
+    output:
+        SCRATCH_DIR + "/normal_only_list/{normal}_vcf.list"
+    params:
+        cluster = "-q condo -l walltime=8:00:00"
+    run:
+        f = open(output[0], "w")
+        for path in input:
+            f.write(path + "\n")
+        f.close()
+
+
+rule gather_normal_only_vcfs:
+    input:
+        SCRATCH_DIR + "/normal_only_list/{normal}_vcf.list"
+    output:
+        vcf = SCRATCH_DIR + "/normals_for_pon/{normal}_for_pon.vcf.gz",
+        tbi = SCRATCH_DIR + "/normals_for_pon/{normal}_for_pon.vcf.gz.tbi"
+    params:
+        cluster = "-q home -M 'xiy010@ucsd.edu' -l nodes=1:ppn=8 -l walltime=24:00:00",
+    benchmark:
+        OUT_DIR + "/benchmarks/normals_for_pon/{normal}.txt"
+    shell:
+        "{JAVA} -Xmx20G -jar {GATK4} "
+        "    GatherVcfs "
+        "    -I {input} "
+        "    -O {output.vcf}; "
+        "tabix -p vcf {output.vcf}"
+
+
+rule generate_pon_list:
+    input:
+        expand(SCRATCH_DIR + "/normals_for_pon/{normal}_for_pon.vcf.gz", normal=NORMALS.keys())
+    output:
+        SCRATCH_DIR + "/pon_list/normals_for_pon_vcf.list"
+    params:
+        cluster = "-q home -l walltime=24:00:00"
+    run:
+        f = open(output[0], "w")
+        for path in input:
+            f.write(path + "\n")
+        f.close()
+
+rule generate_PON:
+    input:
+        SCRATCH_DIR + "/pon_list/normals_for_pon_vcf.list"
+    output:
+        OUT_DIR + "/pon/mutect2_pon.vcf.gz"
+    params:
+        cluster = "-q condo -M 'xiy010@ucsd.edu' -l nodes=1:ppn=4 -l walltime=8:00:00",
+    benchmark:
+        OUT_DIR + "/benchmarks/pon/mutect2_PON.txt"
+    shell:
+        "{JAVA} -Xmx12G -jar {GATK4} "
+        "    CreateSomaticPanelOfNormals "
+        "    -vcfs {input} "
+        "    -O {output} "
+     
+
+rule run_mutect2_single_mode:
+    input:
+        tumor = lambda wildcards: TUMORS[wildcards.tumor],
+        pon = OUT_DIR + "/pon/mutect2_pon.vcf.gz",
+        intervals = SCRATCH_DIR + "/intervals/{interval}-scattered.intervals"
+    output:
+        SCRATCH_DIR + "/single_mode_intervals/{tumor}/{interval}_somatic.vcf.gz"
+    params:
+        cluster = "-q condo -M 'xiy010@ucsd.edu' -l nodes=1:ppn=4 -l walltime=8:00:00",
+    benchmark:
+        OUT_DIR + "/benchmarks/single_mode_intervals/{tumor}/{interval}.txt"
+    shell:
+        "{JAVA} -Xmx12G -jar {GATK4} "
+        "    Mutect2 "
+        "    -I {input.tumor} "
+        "    -tumor {wildcards.tumor} "
+        "    --panel-of-normals {input.pon} "
+        "    -R {REF_FASTA} "
+        "    --af-of-alleles-not-in-resource 0.00003125 "
+        "    --germline-resource {GNOMAD} "
+        "    -L {input.intervals} "
+        "    -O {output} "
+
+
+rule generate_single_mode_list:
+    input:
+        expand(SCRATCH_DIR + "/single_mode_intervals/{{tumor}}/{interval}_somatic.vcf.gz", interval=INTERVALS)
+    output:
+        SCRATCH_DIR + "/single_mode_vcf_list/{tumor}_vcf.list"
+    params:
+        cluster = "-q condo -M 'xiy010@ucsd.edu' -l walltime=8:00:00"
+    run:
+        f = open(output[0], "w")
+        for path in input:
+            f.write(path + "\n")
+        f.close()
+
+
+rule gather_single_mode_vcfs:
+    input:
+        SCRATCH_DIR + "/single_mode_vcf_list/{tumor}_vcf.list"
+    output: 
+        vcf = SCRATCH_DIR + "/single_mode/{tumor}_somatic.vcf.gz",
+        tbi = SCRATCH_DIR + "/single_mode/{tumor}_somatic.vcf.gz.tbi"
+    params:
+        cluster = "-q home -M 'xiy010@ucsd.edu' -l nodes=1:ppn=8 -l walltime=24:00:00",
+    benchmark:
+        OUT_DIR + "/benchmarks/single_mode/{tumor}.txt"
+    shell:
+        "{JAVA} -Xmx24g -jar {GATK4} "
+        "    GatherVcfs "
+        "    -I {input} "
+        "    -O {output.vcf}; "
+        "tabix -p vcf {output.vcf}"
+
+rule filter_single_mode:
+    input:
+        SCRATCH_DIR + "/single_mode/{tumor}_somatic.vcf.gz"
+    output:
+        SCRATCH_DIR + "/filtered_single_mode/{tumor}_somatic.vcf.gz"
+    params:
+        cluster = "-q home -M 'xiy010@ucsd.edu' -l nodes=1:ppn=8 -l walltime=48:00:00",
+    shell:
+        "{JAVA} -Xmx24G -jar {GATK4}"
+        "    FilterMutectCalls"
+        "    -V {input}"
+        "    -O {output};"
+
+rule extract_pass:
+    input:
+        SCRATCH_DIR +  "/filtered_single_mode/{tumor}_somatic.vcf.gz"
+    output:
+        SCRATCH_DIR + "/passed_single_mode/{tumor}_somatic.vcf.gz"
+    params:
+        cluster = "-q hotel -l walltime=24:00:00",
+    shell:
+        r"""
+            zcat {input}|grep -v "^#" | grep "PASS" | gzip > {output}
+        """
+
+
+
+
