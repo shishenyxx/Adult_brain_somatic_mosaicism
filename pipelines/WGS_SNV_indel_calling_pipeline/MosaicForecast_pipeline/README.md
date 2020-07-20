@@ -1,4 +1,4 @@
-# Snakemake pipeline for MosaicForecast variant calling from WGS data, based on the result of MuTect2 single mode
+# Snakemake pipeline for MosaicForecast mosaic variant classifier from WGS data, based on the result of MuTect2 single mode
 
 The pipeline is re-implemented from the official MosaicForecast pipeline by Yanmei Dou.
 
