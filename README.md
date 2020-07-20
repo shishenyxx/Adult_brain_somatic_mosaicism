@@ -36,7 +36,5 @@ Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mos
 
 [Computational simulations and plotting](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/Left_right_founder_estimation) for left-right starting populations.
 #### 3.3 Pipelines for sorted population, the QC of sorting
-#### 3.4 Pipelines for further analysis
 
-UMAP clustering for variants and sequenced samples
-#### 4. [UMAP Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) 
+### 4. [UMAP Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) 
