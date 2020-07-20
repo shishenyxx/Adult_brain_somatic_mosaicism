@@ -1,0 +1,30 @@
+# INPUT 
+input_files : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation/input_files.txt"
+
+# OUTPUT
+out_dir : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation"
+scratch_dir : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation/scratch"
+
+# SOFTWARE
+gatk4 : "/projects/ps-gleesonlab3/rdg/src/gatk-4.0.4.0/gatk"
+annovar : "/home/xiy010/tools/annovar/annotate_variation.pl"
+annovar_db : "/home/xiy010/tools/annovar/humandb/"
+
+
+# SCRIPTS
+homopolymer_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/compute_homopolymer_dinucleotide_nearindel_rpmsk.py"
+ci_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/run_samtools_and_compute_ci.py"
+summerize_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/summerize_results.py"
+
+# REFERENCE FILES
+bed_file : "/projects/ps-gleesonlab3/rdg/genomes/hg19/bed_files/wgs_nochr.bed"
+ref_fasta : "/projects/ps-gleesonlab3/lil067/references/GRCh37_plus_decoy/hs37d5.fa"
+
+#gnomad : "/projects/ps-gleesonlab3/rdg/genomes/hg19/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz"
+gnomad_af : "/projects/ps-gleesonlab3/rdg/genomes/hg19/af-only-gnomad.raw.sites.b37.vcf.gz"
+ucsc_rpmsk : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/rpmsk.txt"
+repeat_masker : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/all_repeats.b37.bed"
+segdup : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/segdup.hg19.bed"
+
+
+
