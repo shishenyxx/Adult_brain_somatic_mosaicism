@@ -1,30 +1,10 @@
-# INPUT 
-input_files : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation/input_files.txt"
+input_files : "/projects/ps-gleesonlab5/user/xiy010/analysis/2018-09-02-control-cohort/2018-12-20-control-cohort-all/8-Mutect2_single_mode/2019-09-08-MosaicForecast/input_files.txt"
+out_dir : "/projects/ps-gleesonlab5/user/xiy010/analysis/2018-09-02-control-cohort/2018-12-20-control-cohort-all/8-Mutect2_single_mode/2019-09-08-MosaicForecast"
+scratch_dir : "/oasis/tscc/scratch/gchai/mosaicforcast"
 
-# OUTPUT
-out_dir : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation"
-scratch_dir : "/projects/ps-gleesonlab6/4dbsm/jun_2019/MosaicCalls/MosaicForecast/annotation/scratch"
-
-# SOFTWARE
-gatk4 : "/projects/ps-gleesonlab3/rdg/src/gatk-4.0.4.0/gatk"
-annovar : "/home/xiy010/tools/annovar/annotate_variation.pl"
-annovar_db : "/home/xiy010/tools/annovar/humandb/"
-
-
-# SCRIPTS
-homopolymer_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/compute_homopolymer_dinucleotide_nearindel_rpmsk.py"
-ci_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/run_samtools_and_compute_ci.py"
-summerize_script : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/helper_scripts/summerize_results.py"
-
-# REFERENCE FILES
-bed_file : "/projects/ps-gleesonlab3/rdg/genomes/hg19/bed_files/wgs_nochr.bed"
+read_length : 150
 ref_fasta : "/projects/ps-gleesonlab3/lil067/references/GRCh37_plus_decoy/hs37d5.fa"
+mosaicforecast : "/home/xiy010/tools/MosaicForecast"
+umap : "/projects/ps-gleesonlab5/user/xiy010/analysis/2019_08_13_check_pm5bp/MosaicForecast_analysis/hg19/k24.umap.wg.bw"
 
-#gnomad : "/projects/ps-gleesonlab3/rdg/genomes/hg19/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz"
-gnomad_af : "/projects/ps-gleesonlab3/rdg/genomes/hg19/af-only-gnomad.raw.sites.b37.vcf.gz"
-ucsc_rpmsk : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/rpmsk.txt"
-repeat_masker : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/all_repeats.b37.bed"
-segdup : "/projects/ps-gleesonlab5/user/xiy010/pipeline/mutect2_strelka2/ref_files/segdup.hg19.bed"
-
-
-
+model_trained : "/home/xiy010/tools/MosaicForecast/models_trained/200xRFmodel_addRMSK_Refine.rds"
