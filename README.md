@@ -32,6 +32,8 @@ After variant calling from different strategies, variants were annotated and fil
 
 ### 3. Pipelines for the data analysis, variant filtering, comprehensive annotations, and statistical analysis
 #### 3.1 Pipelines for mosaic variant determination, annotations, and plotting
+[Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/pipelines/Codes_for_mosaic_variant_annotations_after_MPAS.py) to filter and annotate on MPAS and snMPAS data.
+
 [Codes and config files](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/circos) for the Circos plot of square root-transformed AFs measured by MPAS.
 
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/permutation) for permutation analysis from gnomAD and [codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Genomic_enrichment/Plot_enrichment.r) for plotting the permutation result.
@@ -43,6 +45,9 @@ Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mos
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Correlation_clustering/corr_clustermap.py) for correlation analysis and cluster representation of the AFs measured by MPAS.
 
 [Computational simulations and plotting](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/Left_right_founder_estimation) for left-right starting populations.
-#### 3.3 Pipelines for sorted population, the QC of sorting
 
-## 4 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
+## 4 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Codes_for_plotting_main_figure_panels_based_on_MPAS_and_snMPAS_annotation.py) for the plotting of panels in the main figures and supplements.
+
+## 5 Pipelines for sorted population, the QC of sorting
+
+## 6 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
