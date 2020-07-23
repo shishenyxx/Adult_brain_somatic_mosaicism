@@ -1,6 +1,6 @@
 ## Adult_brain_somatic_mosaicism
 
-This repository is a collaboration of codes and scripts used in the analysis of human brain somatic mosaicism [study](http://dx.doi.org/10.15154/1519086).
+This repository is a collaboration of codes and scripts used in the analysis of a somatic mosaicism [study](http://dx.doi.org/10.15154/1519086) on an entire human coretical regions, subregions, sorted populations and single nuclei.
 
 -----------------------------------
 
