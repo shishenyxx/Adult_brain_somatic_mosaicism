@@ -48,6 +48,6 @@ Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mos
 
 ## 4 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Codes_for_plotting_main_figure_panels_based_on_MPAS_and_snMPAS_annotation.py) for the plotting of panels in the main figures and supplements.
 
-## 5 Codes for sorted population, the QC of sorting
+## 5 Codes for sorted population, and the QC for sorting
 
 ## 6 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
