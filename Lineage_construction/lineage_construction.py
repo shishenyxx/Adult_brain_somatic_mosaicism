@@ -1,6 +1,6 @@
 ### This python script is used to conduct lineage construction based on snMPAS and MPAS quantification in single nuclei and bulk samples
 ### The script is written by Xin Xu
-
+#----import-----Python 3.7.6-----------------------------------------------------------------
 import pandas as pd #version 1.0.1
 import numpy as np #version 1.18.1
 import seaborn as sns #version 0.10.0
