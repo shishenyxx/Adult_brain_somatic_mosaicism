@@ -7,12 +7,12 @@ Last modified on July 17th 2020
 """
 
 
-#Import modules
-import pandas as pd
-import numpy as np
-import scipy.stats
-import matplotlib.pyplot as plt
-import seaborn as sns
+#Import modules Python version 3.7.6
+import pandas as pd #version 1.0.1
+import numpy as np #version 1.18.1
+import scipy.stats #version 1.4.1 
+import matplotlib.pyplot as plt #version 3.1.3
+import seaborn as sns #version 0.10.0
 
 plt.rcParams['svg.fonttype'] = 'none'
 plt.ioff()
