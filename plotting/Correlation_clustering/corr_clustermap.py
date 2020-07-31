@@ -7,7 +7,7 @@ Last modified on July 17th 2020
 """
 
 
-#Import modules Python version 3.7.6
+#Import modules (Python version 3.7.6)
 import pandas as pd #version 1.0.1
 import numpy as np #version 1.18.1
 import scipy.stats #version 1.4.1 
