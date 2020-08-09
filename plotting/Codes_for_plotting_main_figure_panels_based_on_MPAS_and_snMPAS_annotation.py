@@ -1,10 +1,8 @@
-##Codes for the plotting of all main figure panels based on MPAS and snMPAS annotation
-
 # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 24 04:33:04 2019
 
-@author: Martin W. Breuss
+@author: Martin
 """
 
 #Import modules
@@ -14,9 +12,9 @@ import pandas as pd
 import numpy as np
 import math
 import scipy as sp
-import pingouin as pg
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pingouin as pg
 
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle, Circle, Polygon, Patch
@@ -893,7 +891,11 @@ def annotate_locations(df,
     for index, row in key.iterrows():
         dictionary[row.ID] = row.LOCATION
     
+    pdic = {'A':'g', 'B':'c', 'C':'h', 'D':'k', 'E':'f', 'F':'a', 'G':'i',
+            'H':'m', 'I':'e', 'J':'d', 'K':'l', 'L':'j', 'M':'b'}
+    
     df['LOCATION'] = df.apply(lambda row: dictionary[row.ID], axis=1)
+    df['LOCATION_PAPER'] = df.apply(lambda row: pdic[row.LOCATION], axis=1)
     
 #---
 def annotate_lateralization_presence(df):
@@ -1374,6 +1376,73 @@ def plot_boxes_for_categories(df, swarm_flag=False):
     
     plt.show()
     
+
+def plot_boxes_for_categories_split(df):
+    '''plot several categories as boxes side by side with the same
+    visualization. swarmflag indicates whether swarmplot is included or not.'''
+    
+    df = df[df.MAX_MAF_25_BOOL == True]
+    
+    df['MAF'] = df.MAF**0.5
+    
+    fig, axs = plt.subplots(nrows=2, ncols=6,
+                            gridspec_kw={'height_ratios':[1,5]})
+
+    all_mos = df
+    across_body = df[(df.SET_IN_BRAIN) & ~(df.SET_BRAIN_ONLY)]
+    brain_only = df[df.SET_BRAIN_ONLY]
+    cortex_only = df[df.SET_CORTEX_ONLY]
+    brain_side_restricted = df[((df.SET_LEFT_ONLY) | (df.SET_RIGHT_ONLY)) &
+                                (df.SET_CORTEX_ONLY)]
+    brain_one_tissue_only = df[(df.SET_ONE_TISSUE) & (df.SET_BRAIN_ONLY)]
+    
+    plots = [all_mos, across_body, brain_only, cortex_only,
+             brain_side_restricted, brain_one_tissue_only]
+    
+    colors = ['0.5', '0.8', 'xkcd:dark blue', 'xkcd:blue', 'xkcd:sky blue',
+              'xkcd:pale blue']
+    
+    names = ['All Variants', 'Brain and Organs', 'Brain Only', 'Cortex Only',
+             'Brain Lateralized', 'Brain Single Sample']
+    
+    for plot, color, name, i in zip(plots, colors, names, range(7)):
+        
+        sns.boxplot(x='MAX_MAF_25_BOOL', y='MAF', data=plot, color=color,
+                    ax=axs[0,i])
+        sns.boxplot(x='MAX_MAF_25_BOOL', y='MAF', data=plot, color=color,
+                    ax=axs[1,i])
+        
+        axs[0,i].set_ylim(0.2**0.5, 1)
+        axs[0,i].set_yticks([0.2**0.5, 1])
+        axs[0,i].set_yticklabels(['0.2', '1.00'])
+        
+        axs[1,i].set_ylim(0, 0.2)
+        axs[1,i].set_yticks([0, 0.05**0.5, 0.1**0.5, 0.2**0.5])
+        axs[1,i].set_yticklabels(['0.00', '0.05', '0.10', '0.20'])
+        
+        axs[0,i].set_xlabel('')
+        axs[0,i].set_xticks([])
+        axs[1,i].set_xlabel(name, rotation=45, ha='right')
+        axs[1,i].set_xticks([])
+        
+        if i != 0:
+            sns.despine(left=True, bottom=True, offset=5, trim=True,
+                        ax=axs[0,i])
+            axs[0,i].set_yticks([])
+            axs[0,i].set_ylabel('')
+            sns.despine(left=True, bottom=True, offset=5, trim=True,
+                        ax=axs[1,i])
+            axs[1,i].set_yticks([])
+            axs[1,i].set_ylabel('')
+        else:
+            sns.despine(bottom=True, offset=5, trim=True, ax=axs[0,i])
+            sns.despine(bottom=True, offset=5, trim=True, ax=axs[1,i])
+            axs[1,i].set_ylabel('Max. Allelic Fraction\n(sqrt-t)')
+    
+    plt.show()
+
+
+    
     
 def plot_with_custum_ci_SP_highnumber(df, x=300, y=0.51):
     '''use the reduced dataframe as input (e.g. use only brain variants).'''
@@ -1451,6 +1520,60 @@ def plot_sml_1tissues(df, y=50):
     sns.despine(bottom=True, offset=5, trim=True)
     
     plt.show()
+    
+
+def plot_25_multi_pos(df, pos_lst, y_tcks=[0.00, 0.01, 0.02, 0.05]):
+    
+    df = df[(df.POS.isin(pos_lst)) & (df.EXPERIMENT == 'bulk') &
+            (df.CONSIDERED_MAF_TISSUE != 0)]
+    sorter(df)
+    pos_sorter = dict(zip(pos_lst, range(len(pos_lst))))
+    df['POS_SORTER'] = df['POS'].map(pos_sorter)
+    df.sort_values('POS_SORTER', inplace=True)
+    df['MAF_'] = df.CONSIDERED_MAF_TISSUE**0.5
+    
+    sns.stripplot(x='CHR_POS_REF_ALT', y='MAF_', hue='LG_SM', data=df,
+                  palette=['1.', '0.5', '0.0'], edgecolor='k', linewidth=1)
+    
+    plt.yticks(ticks=[y**0.5 for y in y_tcks], labels=[str(y) for y in y_tcks])
+    plt.xlabel('')
+    plt.ylabel('AF (sqrt-t)')
+    
+    sns.despine(trim=True, offset=5)
+    plt.xticks(rotation=45, ha='right')
+    
+    plt.show()
+    
+def plot_number25_vsAF(df):
+    
+    df = df.copy()
+    
+    df.fillna(0, inplace=True)
+    
+    df = df[(df.EXPERIMENT == 'bulk') & (df.CONSIDERED_MAF_25 != 0)]
+    
+    df['MAF_'] = df.CONSIDERED_MAF_25**0.5
+    
+    sns.regplot(x='MAF_', y='SUM_POS_25', data=df, color='k',
+                scatter_kws={'s':4, 'alpha':0.1}, fit_reg=False)
+                #, line_kws={'color':'r'})
+    #sns.jointplot('MAF_', 'SUM_POS_25', kind='kde', data=df,
+     #             color='r')#.plot_joint(sns.regplot, marker='o', color='k')
+    
+    plt.xlabel('Allelic Fraction (sqrt-t)')
+    plt.xlim(0, 1)
+    plt.xticks(ticks=[0., 0.01**0.5, 0.05**0.5, 0.1**0.5, 0.2**0.5, 0.5**0.5,
+                      1.0],
+               labels=['0.00', '0.01', '0.05', '0.10', '0.20', '0.50', '1.00'])
+    
+    plt.ylabel('Number of Samples')
+    plt.ylim(0, 25)
+    plt.yticks(ticks=[0, 5, 10, 15, 20, 25])
+    
+    sns.despine(offset=5, trim=True)
+    
+    plt.show()
+    #return(sp.stats.spearmanr(df.MAF_, df.SUM_POS_25))
     
     
 #base function phage af plot---------------------------------------------------
@@ -2600,7 +2723,7 @@ def volcano_left_right(df, depth=1000):
     
     #replace values above 10 with 10
     plot_df['NEG_LOG_P_adj'] = plot_df.apply(replace_above_10, axis=1)
-    #make markers for values above 10 with triangle
+    #make ec for values above 10 red
     ecs = ['r' if p > 10 else 'k' for p in plot_df.NEG_LOG_P]
     #make colors for markers abov p=0.05 and below/above -0.5/0.5
     colors = make_colors_volcano(plot_df)
@@ -2717,18 +2840,132 @@ def make_sizes_volcano(df):
     
     return lst
 #---
+    
+def delta_AF_left_right(df, depth=1000):
+    '''get average af, normalized delta, and p value to plot volcano.'''
+    
+    df = df[(df.EXPERIMENT.isin(['NeuN', 'Olig2', 'Lhx2'])) &
+            (df.SET_SORT_INCLUDED == True) & (df.DEPTH >= depth) &
+            (
+             ((df.SET_IN_CORTEX) & (df.SET_CORTEX_ONLY == False)) |
+             ((df.SET_IN_CORTEX) & (df.SET_LEFT_ONLY == False) &
+                                   (df.SET_RIGHT_ONLY == False))
+            )]
+    df['SUM_SORTS_POS'] = df.groupby('CHR_POS_REF_ALT')['IN_TISSUE']\
+                            .transform('sum')
+    df = df[df.SUM_SORTS_POS > 0].reset_index()
+    
+    df['MAX_SORTED_CONSIDERED'] = df.groupby('CHR_POS_REF_ALT')\
+                                     ['CONSIDERED_MAF_TISSUE'].transform('max')
+    df['LEFT_AVG_CMAF'] = l_r_acmaf(df, l_r='L')
+    df['RIGHT_AVG_CMAF'] = l_r_acmaf(df, l_r='R')
+    df['NORM_DELTA'] = df.apply(norm_delta, axis=1)
+    df['NEG_LOG_P'] = neg_log_p(df)
+    df['MAF_'] = df.MAX_SORTED_CONSIDERED**0.5
+    
+    plot_df = df[~(df.CHR_POS_REF_ALT.duplicated())]
+    
+    #make colors for markers abov p=0.05 and below/above -0.5/0.5
+    colors = make_colors_volcano(plot_df)
+    
+    plt.scatter(plot_df.NORM_DELTA, plot_df.MAF_, c=colors, alpha=0.7,
+                zorder=100)
+    plt.vlines(x=0, ymin=0, ymax=10, linestyles='--', color='k')
+    
+    plt.xlim(-1.035, 1.035)
+    plt.ylim(0., 0.5**0.5)
+    plt.xlabel('Normalized d (R-L)')
+    plt.ylabel('Max. Allelic Fraction')
+    plt.xticks(ticks=[-1.0, -0.5, 0., 0.5, 1.0])
+    plt.yticks(ticks=[0., 0.1**0.5, 0.2**0.5, 0.5**0.5],
+               labels=['0.0', '0.1', '0.2', '0.5'])
+    
+    sns.despine(trim=True, offset=5)
+    
+    plt.show()
+    return plot_df
+
+#---
+#---
+    
+def lr_ap_plot(df, depth=1000):
+    
+    df = df[(df.EXPERIMENT.isin(['NeuN', 'Olig2', 'Lhx2'])) &
+            (df.SET_SORT_INCLUDED == True) & (df.DEPTH >= depth) &
+            (df.SET_IN_CORTEX)]
+    
+    df['SUM_SORTS_POS'] = df.groupby('CHR_POS_REF_ALT')['IN_TISSUE']\
+                            .transform('sum')
+    df = df[df.SUM_SORTS_POS > 0].reset_index()
+    
+    df['MAX_SORTED_CONSIDERED'] = df.groupby('CHR_POS_REF_ALT')\
+                                     ['CONSIDERED_MAF_TISSUE'].transform('max')
+    df['LEFT_AVG_CMAF'] = l_r_acmaf(df, l_r='L')
+    df['RIGHT_AVG_CMAF'] = l_r_acmaf(df, l_r='R')
+    df['NORM_DELTA_LR'] = df.apply(norm_delta, axis=1)
+    
+    df['ANT_AVG_CMAF'] = a_p_acmaf(df, a_p='A')
+    df['POS_AVG_CMAF'] = a_p_acmaf(df, a_p='P')
+    df['NORM_DELTA_AP'] = df.apply(norm_delta_ap, axis=1)
+    
+    plot_df = df[~(df.CHR_POS_REF_ALT.duplicated())][['NORM_DELTA_LR',
+                                                     'NORM_DELTA_AP']]
+    plot_df = plot_df.dropna()
+    
+    #plt.scatter(plot_df.NORM_DELTA_LR, plot_df.NORM_DELTA_AP, alpha=0.7)
+    sns.jointplot('NORM_DELTA_LR', 'NORM_DELTA_AP', kind='kde', data=plot_df,
+                  color='k').plot_joint(sns.regplot, marker='+', fit_reg=False,
+                                        color='r')
+    
+    plt.xlabel('Normalized d (R-L)')
+    plt.ylabel('Normalized d (A-P)')
+    
+    plt.show()
+    
+    
+    
+
+def a_p_acmaf(df, a_p):
+    
+    if a_p == 'A':
+        areas = ['PF', 'F']
+    elif a_p == 'P':
+        areas = ['P', 'O', 'T']
+    
+    df_ap = df[df.BRAIN_REGION.isin(areas)]
+    df_grp = df_ap.groupby('CHR_POS_REF_ALT').mean().reset_index()
+    
+    df_tomerge = df_grp[['CHR_POS_REF_ALT', 'CONSIDERED_MAF_TISSUE']]
+    df_tomerge.rename({'CONSIDERED_MAF_TISSUE': 'OUTPUT'}, axis=1,
+                      inplace=True)
+    
+    df_out = pd.merge(df, df_tomerge, how='left')
+    
+    return df_out.OUTPUT
+    
+def norm_delta_ap(row):
+    
+    a = row.ANT_AVG_CMAF
+    p = row.POS_AVG_CMAF
+    maxi = max([a, p])
+    
+    return (a-p)/maxi
 
 
+
+#---
 def loliplot_NeuN_TBR1(df, POS):
     
     '''plot NeuN and TBR1 in a small loliplot'''
+    
     markers = ['NeuN', 'TBR1']
-    colors = ['xkcd:brick red', 'xkcd:baby pink']
     
     df = df[(df.EXPERIMENT.isin(markers)) & (df.POS == POS) &
             (((df.L_R == 'L') & (df.BRAIN_REGION == 'T')) |
              ((df.L_R == 'R') & (df.BRAIN_REGION == 'PF')))]
     sorter(df)
+    
+    colors = make_loli_NT_colors(df)
     
     df['MAF_'] = (df.CONSIDERED_MAF_TISSUE * df.SET_SORT_INCLUDED)**0.5
     
@@ -2739,12 +2976,13 @@ def loliplot_NeuN_TBR1(df, POS):
         plt.vlines([0 + i/4, 1 + i/4], ymin=[0, 0],
                    ymax=df[df.EXPERIMENT == markers[i]].MAF_)
         plt.scatter([0 + i/4, 1 + i/4], df[df.EXPERIMENT == markers[i]].MAF_,
-                    color=colors[i], s=100, edgecolors='k', zorder=100)
+                    color=[colors[i], colors[i+2]], s=100, edgecolors='k',
+                    zorder=100)
     
     plt.vlines(x=0.625, ymin=0, ymax=maxi**0.5, linestyles='--')
     
     plt.xlim(-0.1, 1.35)
-    plt.ylim(-((maxi/100)**0.5), maxi**0.5)
+    plt.ylim(-((maxi/1000)**0.5), maxi**0.5)
     
     plt.xticks(ticks=[0.125, 1.125], labels=['L-T', 'R-PF'])
     plt.yticks(ticks=[0., semi**0.5, maxi**0.5],
@@ -2756,46 +2994,210 @@ def loliplot_NeuN_TBR1(df, POS):
     
     sns.despine(bottom=True, trim=True, offset=5)
     
+    ax = plt.gca()
+    ax.set(adjustable='box', aspect=15)
+    
     plt.show()
     
     
+def loliplot_NeuN_TBR1_onax(df, POS, ax, side, brreg):
     
+    '''plot NeuN and TBR1 in a small loliplot but onax.'''
     
+    markers = ['NeuN', 'TBR1']
     
-    fig, axs = plt.subplots(ncols=4, sharey=False)
+    df = df[(df.EXPERIMENT.isin(markers)) & (df.POS == POS) &
+            (df.L_R == side) & (df.BRAIN_REGION == brreg)]
+    sorter(df)
     
-    for i, lr in enumerate(['L', 'R']):
-        for j, marker, color in zip(range(2), markers, colors):
-            k = i * 2 + j
-            
-            df_m = df[(df.L_R == lr) & (df.EXPERIMENT == marker)]
-            
-            colors_m = make_colors_markers(df_m, color)
-            axs[k].vlines(range(len(df_m)), ymin=[0 for i in df_m.MAF_],
-                          ymax=df_m.MAF_)
-            axs[k].scatter(range(len(df_m)), df_m.MAF_, color=colors_m, s=100,
-                           edgecolors='k', zorder=100)
-            
-            axs[k].set_xlim(-1, 5)
-            axs[k].set_ylim(-((maxi/10)**0.5), maxi**0.5)
-            
-            if k != 0:
-                sns.despine(left=True, bottom=True, ax=axs[k])
-                axs[k].set_xticks([])
-                axs[k].set_yticks([])
+    colors = make_loli_NT_colors(df)
     
-    line = Line([0.5125, 0.5125], [0.25, 0.88], transform=fig.transFigure,
-                figure=fig, color='k', linestyle='--')
-    fig.lines.extend([line])
+    df['MAF_'] = (df.CONSIDERED_MAF_TISSUE * df.SET_SORT_INCLUDED)**0.5
     
-    axs[0].set_yticks([0., semi**0.5, maxi**0.5])
-    axs[0].set_yticklabels(['0.0', semi_l, maxi_l])
-    sns.despine(bottom=True, trim=True, ax=axs[0])
-    axs[0].set_xticks([])
-    axs[0].set_ylabel('AF (sqrt-t)')
-    axs[3].set_title(df.CHR_POS_REF_ALT.unique()[0])
-                
+    maxi, semi, maxi_l, semi_l = get_ticks(df)
+    
+    for i in range(2):
+    
+        ax.vlines([0 + i/4], ymin=[0],
+                   ymax=df[df.EXPERIMENT == markers[i]].MAF_)
+        ax.scatter([0 + i/4], df[df.EXPERIMENT == markers[i]].MAF_,
+                    color=[colors[i]], s=100, edgecolors='k', zorder=100)
+    
+    ax.set_xlim(-0.1, .35)
+    ax.set_ylim(-((maxi/1000)**0.5), maxi**0.5)
+    
+    ax.set_xticks([0.125])
+    ax.set_xticklabels(['NeuN/TBR1'])
+    ax.set_yticks([0., semi**0.5, maxi**0.5])
+    ax.set_yticklabels(['0.0', semi_l, maxi_l])
+    
+    ax.set_xlabel('')
+    ax.set_ylabel('AF (sqrt-t)')
+    
+    sns.despine(bottom=True, trim=True, offset=5, ax=ax)
+    
+    ax.set(adjustable='box', aspect=15)
+    
+    return ax
+
+def make_loli_NT_colors(df):
+    '''make colors as before for loliplot NeuN/TBR1.'''
+    
+    colors = []
+    
+    for i, depth in enumerate(df.DEPTH):
+        
+        if depth < 100:
+            colors.append('w')
+        elif depth < 1000:
+            colors.append('0.8')
+        elif i in [0, 2]:
+            colors.append('xkcd:brick red')
+        elif i in [1, 3]:
+            colors.append('xkcd:baby pink')
+        else:
+            colors.append('k')
+    
+    return colors
+
+######Combination Plot for Phage and all three Regions and Sorted######
+    
+def combination_complete_plot(df, POS):
+    '''use the four onax plots to obtain a full view of a single variant.'''
+    
+    #old axes
+    ax1 = plt.subplot2grid((2, 8), (0, 0), colspan=2)
+    ax2 = plt.subplot2grid((2, 8), (1, 0), colspan=2)
+    ax3 = plt.subplot2grid((2, 8), (0, 3), colspan=2, rowspan=2)
+    ax4 = plt.subplot2grid((2, 8), (0, 6), colspan=2)
+    ax5 = plt.subplot2grid((2, 24), (1, 16))
+    ax6 = plt.subplot2grid((2, 24), (1, 17))
+    ax7 = plt.subplot2grid((2, 24), (1, 18))
+    ax8 = plt.subplot2grid((2, 24), (1, 19))
+    ax9 = plt.subplot2grid((2, 24), (1, 20))
+    ax10 = plt.subplot2grid((2, 24), (1, 21))
+    ax11 = plt.subplot2grid((2, 24), (1, 22))
+    ax12 = plt.subplot2grid((2, 24), (1, 23))
+    
+    #new axes
+    ax13 = plt.subplot2grid((2, 8), (1, 2))
+    ax14 = plt.subplot2grid((2, 8), (0, 5))
+    ax15 = plt.subplot2grid((2, 8), (0, 2))
+    
+    make_subplot_variant_onax(df, POS, ax1, 'L', 'PF')
+    make_subplot_variant_onax(df, POS, ax2, 'L', 'T')
+    make_AF_plot_variant_onax(df[df.EXPERIMENT == 'bulk'], POS, ax3)
+    make_subplot_variant_onax(df, POS, ax4, 'R', 'PF')
+    plot_sort_overview_onax(df, POS, [ax5, ax6, ax7, ax8, ax9, ax10, ax11, 
+                                      ax12])
+    
+    loliplot_NeuN_TBR1_onax(df, POS, ax13, side='L', brreg='T')
+    loliplot_NeuN_TBR1_onax(df, POS, ax14, side='R', brreg='PF')
+    
+    minmaxplot(df, POS, ax15)
+    
+    ax3.set_xlim(-1, 21.5)
+    ax3.set_ylim(2.5, 46)
+    ax3.tick_params(bottom=False, left=False,
+                    labelbottom=False, labelleft=False)
+    
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.set_title('')
+    
+    ax1.set_title('L-PF')
+    ax2.set_title('L-T')
+    ax3.set_title(df[df.POS == POS].CHR_POS_REF_ALT.unique()[0])
+    ax4.set_title('R-PF')
+    ax8.set_title('AF (sqrt-t) Sorted Populations')
+    
     plt.show()
+    
+    
+def combination_complete_plot_pdf(df, path):
+    '''use the four onax plots to obtain a full view of a single variant.'''
+    
+    pdf_pages = PdfPages(path)
+    
+    df = df.fillna(0)
+    
+    for POS in df.POS.unique():
+        
+        fig = plt.figure(figsize=(16, 9), dpi=100)
+        
+        #old axes
+        ax1 = plt.subplot2grid((2, 8), (0, 0), colspan=2)
+        ax2 = plt.subplot2grid((2, 8), (1, 0), colspan=2)
+        ax3 = plt.subplot2grid((2, 8), (0, 3), colspan=2, rowspan=2)
+        ax4 = plt.subplot2grid((2, 8), (0, 6), colspan=2)
+        ax5 = plt.subplot2grid((2, 24), (1, 16))
+        ax6 = plt.subplot2grid((2, 24), (1, 17))
+        ax7 = plt.subplot2grid((2, 24), (1, 18))
+        ax8 = plt.subplot2grid((2, 24), (1, 19))
+        ax9 = plt.subplot2grid((2, 24), (1, 20))
+        ax10 = plt.subplot2grid((2, 24), (1, 21))
+        ax11 = plt.subplot2grid((2, 24), (1, 22))
+        ax12 = plt.subplot2grid((2, 24), (1, 23))
+    
+        #new axes
+        ax13 = plt.subplot2grid((2, 8), (1, 2))
+        ax14 = plt.subplot2grid((2, 8), (0, 5))
+        ax15 = plt.subplot2grid((2, 8), (0, 2))
+    
+        make_subplot_variant_onax(df, POS, ax1, 'L', 'PF')
+        make_subplot_variant_onax(df, POS, ax2, 'L', 'T')
+        make_AF_plot_variant_onax(df[df.EXPERIMENT == 'bulk'], POS, ax3)
+        make_subplot_variant_onax(df, POS, ax4, 'R', 'PF')
+        plot_sort_overview_onax(df, POS, [ax5, ax6, ax7, ax8, ax9, ax10, ax11, 
+                                          ax12])
+    
+        loliplot_NeuN_TBR1_onax(df, POS, ax13, side='L', brreg='T')
+        loliplot_NeuN_TBR1_onax(df, POS, ax14, side='R', brreg='PF')
+    
+        minmaxplot(df, POS, ax15)
+    
+        ax3.set_xlim(-1, 21.5)
+        ax3.set_ylim(2.5, 46)
+        ax3.tick_params(bottom=False, left=False,
+                        labelbottom=False, labelleft=False)
+    
+        for ax in [ax1, ax2, ax3, ax4]:
+            ax.set_title('')
+    
+        ax1.set_title('L-PF')
+        ax2.set_title('L-T')
+        ax3.set_title(df[df.POS == POS].CHR_POS_REF_ALT.unique()[0])
+        ax4.set_title('R-PF')
+        ax8.set_title('AF (sqrt-t) Sorted Populations')
+        
+        pdf_pages.savefig(fig)
+        plt.close()
+    
+    pdf_pages.close()
+
+
+#---
+def minmaxplot(df, POS, ax):
+    
+    df = df[(df.EXPERIMENT == 'bulk') & (df.CONSIDERED_MAF_TISSUE != 0) &
+            (df.POS == POS)]
+    
+    mi = 'Minimum\n' + str(round(min(df.CONSIDERED_MAF_TISSUE), 3))
+    ma = 'Maximum\n' + str(round(max(df.CONSIDERED_MAF_TISSUE), 3))
+    
+    ax.text(0.5, 0.2, mi, horizontalalignment='center')
+    ax.text(0.5, 0.4, ma, horizontalalignment='center')
+    ax.text(0.5, 0.6, 'Min/Max 25 Tissues', horizontalalignment='center')
+    
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    return ax
+    
+    
+    
+###############################################################################
+
+
 
 #------------------------------------------------------------------------------
 #snMPAS
@@ -2911,7 +3313,7 @@ def make_sorted_sn_plot(df, TLP=True, n_cutoff=21, no01=True, sn_cls='_05',
     sns.despine(offset=5, trim=True)
     
     plt.show()
-    return (df.EXPERIMENT.unique(), df.CHR_POS_REF_ALT.unique())
+    return (df_.EXPERIMENT.unique(), df_.CHR_POS_REF_ALT.unique())
 
 def make_colors_cell_type(df):
     
@@ -3070,6 +3472,154 @@ def correlation_sn(df, method='pearson', only_25=False, cluster=False):
     plt.show()
     
     
+def plot_geo_sort_for_sn(df, POS):
+    '''use onax plots to obtain a usable graph for the trees.'''
     
+    ax1 = plt.subplot2grid((1, 3), (0, 0))
+    ax2 = plt.subplot2grid((1, 14), (0, 6))
+    ax3 = plt.subplot2grid((1, 14), (0, 7))
+    ax4 = plt.subplot2grid((1, 14), (0, 8))
+    ax5 = plt.subplot2grid((1, 14), (0, 9))
+    ax6 = plt.subplot2grid((1, 14), (0, 10))
+    ax7 = plt.subplot2grid((1, 14), (0, 11))
+    ax8 = plt.subplot2grid((1, 14), (0, 12))
+    ax9 = plt.subplot2grid((1, 14), (0, 13))
+    
+    make_AF_plot_variant_onax(df[df.EXPERIMENT == 'bulk'], POS, ax1)
+    plot_sort_overview_onax(df, POS, [ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9])
+    ax1.set_xlim(-1, 21.5)
+    ax1.set_ylim(2.5, 46)
+    ax1.tick_params(bottom=False, left=False,
+                    labelbottom=False, labelleft=False)
+    ax2.tick_params(axis='y', labelsize=30)
+    
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.set_title('')
+        
+    for ax in [ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9]:
+        ax.set_ylim(0)
+        ax.margins(y=0.2)
+    
+    pos = df[df.POS == POS].CHR_POS_REF_ALT.unique()[0]
+    vnr = int(df[df.POS == POS].VARIANT_ORDER_FIG.unique()[0])
+    clade = df[df.POS == POS].CLADE_FIG.unique()[0]
+    
+    ax2.set_title('{}: Variant {}, Clade {}'.format(pos, vnr, clade),
+                  fontsize=30, pad=25)
+    
+    plt.show()
+
+#---
+#sn clade geo pie
+
+def load_prep_df(path_to_data):
+    '''using the data table from XY and XX, import data, then get the
+    contribution by clade for pie chart normalization.'''
+    
+    df = pd.read_csv(path_to_data)
+    
+    df = df[(df.CLADE.isin(['I', 'II', 'III'])) & (df.EXPERIMENT == 'bulk')]
+    df = df.groupby(['SAMPLE', 'CLADE']).sum().reset_index()
+    
+    df['LIST'] = df.apply(extract_organ_lat_experiment_pie, axis=1)
+    
+    df[['ORGAN', 'BRAIN_REGION', 'L_R', 'LG_SM', 'EXPERIMENT']] = \
+        pd.DataFrame(df.LIST.to_list(), index=df.index)
+    
+    organ = {'Ctx': 'A', 'Kidney': 'E', 'Heart': 'C', 'JGG': 'F',
+             'Liver': 'D', 'Cbl': 'B'}
+    region = {'T': 'E', 'no_region': 'F', 'PF': 'A', 'F': 'B', 'P': 'C',
+              'O': 'D'}
+    lr = {'L': 'A', 'R': 'B', 'no_lat': 'C'}
+        
+    df['SORTER_STR'] = df.apply(lambda row: organ[row.ORGAN] +
+                                            lr[row.L_R] +
+                                            region[row.BRAIN_REGION],
+                                axis=1)
+    
+    df['AREA'] = df.apply(lambda row: ' '.join([row.ORGAN, row.L_R,
+                                                row.BRAIN_REGION]),
+                          axis=1)
+    
+    df.sort_values(by=['SORTER_STR', 'CLADE'], inplace=True)
+    
+    return df
 
 
+def extract_organ_lat_experiment_pie(row):
+    
+    items = row.SAMPLE.split('_')
+    
+    if len(items) == 2:
+        return [items[1], 'no_region', 'no_lat', 'no_lrg_sml', 'bulk']
+    
+    elif len(items) == 3:
+        return [items[1], 'no_region', items[2], 'no_lrg_sml', 'bulk']
+    
+    elif len(items) == 5:
+        if items[-1] in ['Sml', 'Lrg']:
+            return [items[1], items[2], items[3], items[4], 'bulk']
+        elif 'Sml' in items[-1]:
+            return [items[1], items[2], items[3], items[4], 'subsample']
+        else:
+            return [items[1], items[2], items[3], 'Lrg', items[4]]
+    
+    elif len(items) == 7:
+        return [items[1], items[2], items[3], items[4], '_'.join(items[5:])]
+    
+    else:
+        return ['zonk2', 'zonk2', 'zonk2', 'zonk2', 'zonk2']
+
+
+def make_all_pies(df, title=False):
+    '''master function to make all pies in one graph.'''
+    
+    f, axs = plt.subplots(nrows=3, ncols=5)
+    
+    for n, area in enumerate(df.AREA.unique()):
+        
+        i = n//5
+        j = n - 5 * i
+        
+        df_ = df[df.AREA == area]
+        make_one_pie(df_, axs[i,j])
+        
+        axs[i,j].set(adjustable='box', aspect='equal')
+        if title == True:
+            axs[i,j].set_title(df_.AREA.iloc[0])
+    
+    plt.show()
+    
+    
+    
+    
+    
+    
+def make_one_pie(df, ax):
+    '''make one pie from a limited df that has a unique SAMPLE.'''
+    
+    colors = ['b', 'g', 'r']
+    
+    
+    if df.ORGAN.iloc[0] == 'Ctx':
+        ax.pie(df[df.LG_SM == 'Sml'].value/np.sum(df[df.LG_SM == 'Sml'].value),
+               startangle=90, counterclock=False, colors=colors,
+               wedgeprops = {'linewidth': 3, 'edgecolor': 'w'})
+
+        
+        ax.pie(df[df.LG_SM == 'Lrg'].value/np.sum(df[df.LG_SM == 'Lrg'].value),
+               startangle=90, counterclock=False, colors=colors, radius=1.5,
+               wedgeprops = {'linewidth': 3, 'edgecolor': 'w', 'width': 0.5})
+    
+    else:
+        ax.pie(df.value/np.sum(df.value), startangle=90, counterclock=False,
+               colors=colors,
+               wedgeprops = {'linewidth': 3, 'edgecolor': 'w'})
+
+    return ax
+    
+    
+    
+    
+    
+    
