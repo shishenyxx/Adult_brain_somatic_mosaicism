@@ -1,6 +1,6 @@
 ## Adult_brain_somatic_mosaicism
 
-This repository is a collaboration of codes and scripts used in the analysis of a somatic mosaicism [study](http://dx.doi.org/10.15154/1519086) on an entire human coretical regions, subregions, sorted populations and single nuclei.
+This repository is a collaboration of codes and scripts used in the analysis of a somatic mosaicism [study](https://staging.bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on an entire human coretical regions, subregions, sorted populations and single nuclei. Raw data is available at the NDA website under study [#919](https://nda.nih.gov/study.html?id=919).
 
 -----------------------------------
 
