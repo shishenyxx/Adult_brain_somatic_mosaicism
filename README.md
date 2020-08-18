@@ -1,6 +1,6 @@
 ## Adult_brain_somatic_mosaicism
 
-This repository is a collaboration of codes and scripts used in the analysis of a somatic mosaicism [study](https://staging.bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on an entire human coretical regions, subregions, sorted populations and single nuclei. Raw data is available at the NDA website under study [#919](https://nda.nih.gov/study.html?id=919).
+This repository is a collaboration of codes and scripts used in the analysis of a [somatic mosaicism study of the NIMH Brain Somatic Mosaicism Network](https://staging.bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on an entire human coretical regions, subregions, sorted populations and single nuclei. Raw data is available at [the NDA website under study #919](https://nda.nih.gov/study.html?id=919).
 
 Cite the codes: Breuss MW, Yang X, Antaki D, Schlachetzki JCM et al. Somatic mosaicism in the mature brain reveals clonal cellular distributions during cortical development. <i>([bioRxiv 2020](https://www.biorxiv.org/content/10.1101/2020.08.10.244814v1.full))</i>
 
