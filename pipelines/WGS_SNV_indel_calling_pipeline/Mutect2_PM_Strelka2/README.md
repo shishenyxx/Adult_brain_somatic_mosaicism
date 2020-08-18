@@ -29,7 +29,7 @@ Path to the "tumor" bam file.
 #### normal_path
 Path to the "normal" bam file.
 #### vcf_path
-Path to the variant quality score recalibrated gvcfs from haplotype caller. This will help the calculation such as "near indel".
+Path to the variant quality score recalibrated vcfs from haplotype caller. The input should be in vcf format. This will help the calculation such as "near indel".
 
 ----------------------------
 
