@@ -3,3 +3,4 @@
 2. different seeds are the labels of sub-lobar samples to shuffle.
 3. different permutations are the permutated sequences.
 4. Numbers are joined with my_join.pl and combined with paste.
+5. sublobar_permutations.sh contains the scripts for all the permutation analysis.
