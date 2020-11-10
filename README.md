@@ -41,12 +41,15 @@ After variant calling from different strategies, variants were annotated and fil
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/permutation) for permutation analysis from gnomAD and [codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Genomic_enrichment/Plot_enrichment.r) for plotting the permutation result.
 
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Supplement_data_single_cell/AF_for_single_cell.r) for plotting of AF measured in snMAPS.
+
 #### 3.2 Pipelines for statistically analysis, QC, and the related plotting
 Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_MPAS_het_and_ref_homo_controls.r) and [snMPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_snMPAS_het_and_ref_homo_controls.r) based on the heterozygous and reference homozygous control variants in the panel.
 
 Codes for sorted population, and the QC for sorting were already described in the [previous publication](https://science.sciencemag.org/content/366/6469/1134/tab-pdf).
 
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Correlation_clustering/corr_clustermap.py) for correlation analysis and cluster representation of the AFs measured by MPAS.
+
+[Codes and permutations](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/sub_lobar_permutation) for the analysis for the distribution of sublobar areas.
 
 [Computational simulations and plotting](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/Left_right_founder_estimation) for left-right starting populations.
 
