@@ -53,3 +53,111 @@ output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
 }
 
 write.csv(output_new, file="ID_01_4tissue_bulk_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_01_sorted_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_01_sorted_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_02_03_04_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_02_03_04_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_02_bulk_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_02_bulk_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_02_sorted_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_02_sorted_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_03_bulk_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_03_bulk_summary_sim.csv")
+
+
+
+raw<-read.csv(file="ID_04_bulk_bulk_simulation.txt",header=F)
+
+output_new<-NA
+output_new$corr_H<-NA
+output_new$corr_anti_H<-NA
+output_new$R<-NA
+
+for(i in 1:10000)
+{
+output_new$corr_H[i]<-cosine(as.numeric(raw[i,]),H_shape)
+output_new$corr_anti_H[i]<-cosine(as.numeric(raw[i,]),Anti_H)
+output_new$R[i]<-output_new$corr_H[i]/output_new$corr_anti_H[i]
+}
+
+write.csv(output_new, file="ID_04_bulk_summary_sim.csv")
