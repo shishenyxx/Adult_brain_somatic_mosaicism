@@ -61,5 +61,7 @@ Codes for sorted population, and the QC for sorting were already described in th
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/4dbsm_final_data_vali_new_data_LIBD02.py) for plotting supplement panels for ID02.
 
 ### 5 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
+UMAP clustering from MPAS from bulk and sorted samples from ID01.
 
 ### 6 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/Lineage_construction/lineage_construction.py) for the lineage construction
+Lineage reconstruction based on snMPAS and MPAS evaluated genotypes from sorted nuclei as well as bulk and sorted populations from ID01.
