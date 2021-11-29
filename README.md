@@ -1,6 +1,6 @@
 ## Adult_brain_somatic_mosaicism
 
-This repository is a collaboration of codes and scripts used in the analysis of [a somatic mosaicism study of the NIMH Brain Somatic Mosaicism Network](https://bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on an entire human coretical regions, subregions, sorted populations, and single nuclei. Raw data is available at [the NDA website under study #919](https://nda.nih.gov/study.html?id=919).
+This repository is a collaboration of codes and scripts used in the analysis of [a somatic mosaicism study of the NIMH Brain Somatic Mosaicism Network](https://bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on the entire human coretical regions, subregions, sorted populations, and single nuclei from ID01(Raw data are available at [the NDA website under study #919](https://nda.nih.gov/study.html?id=919)) and ID02-04 (Raw data are available at [SRA](https://trace.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA736951&o=acc_s%3Aa)). The 300x WGS panel of normal data is available on [SRA](https://trace.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA660493&o=acc_s%3Aa)
 
 Cite the codes: <b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM et al., Gleeson JG. Somatic mosaicism in the mature brain reveals clonal cellular distributions during cortical development. <i>([bioRxiv 2020](https://www.biorxiv.org/content/10.1101/2020.08.10.244814v1.full))</i></b>
 
@@ -33,7 +33,7 @@ After variant calling from different strategies, variants were annotated and fil
 -----------------------------------
 
 ### 3. Pipelines for the data analysis, variant filtering, comprehensive annotations, and statistical analysis
-#### 3.1 Pipelines for mosaic variant determination, annotations, and plotting
+#### 3.1 Pipelines for mosaic variant determination, annotations, and plotting for ID01
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/pipelines/Codes_for_mosaic_variant_annotations_after_MPAS.py) to filter and annotate on MPAS and snMPAS data.
 
 [Codes and config files](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/circos) for the Circos plot of square root-transformed AFs measured by MPAS.
@@ -42,7 +42,9 @@ After variant calling from different strategies, variants were annotated and fil
 
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Supplement_data_single_cell/AF_for_single_cell.r) for plotting of AF measured in snMAPS.
 
-#### 3.2 Pipelines for statistically analysis, QC, and the related plotting
+#### 3.2 Pipelines for mosaic variant determination, annotations, and plotting for ID02, 03, and 04
+
+#### 3.3 Pipelines for statistically analysis, QC, and the related plotting
 Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_MPAS_het_and_ref_homo_controls.r) and [snMPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_snMPAS_het_and_ref_homo_controls.r) based on the heterozygous and reference homozygous control variants in the panel.
 
 Codes for sorted population, and the QC for sorting were already described in the [previous publication](https://science.sciencemag.org/content/366/6469/1134/tab-pdf).
@@ -53,7 +55,9 @@ Codes for sorted population, and the QC for sorting were already described in th
 
 [Computational simulations and plotting](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/tree/master/plotting/Left_right_founder_estimation) for left-right starting populations.
 
-### 4 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Codes_for_plotting_main_figure_panels_based_on_MPAS_and_snMPAS_annotation.py) for the plotting of panels in the main figures and supplements
+### 4 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Codes_for_plotting_main_figure_panels_based_on_MPAS_and_snMPAS_annotation.py) for the plotting of panels in the main figures and supplements for ID01
+
+[Codes]() for plotting supplement panels for ID02.
 
 ### 5 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
 
