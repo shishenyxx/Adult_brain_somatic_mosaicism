@@ -43,6 +43,7 @@ After variant calling from different strategies, variants were annotated and fil
 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Supplement_data_single_cell/AF_for_single_cell.r) for plotting of AF measured in snMAPS.
 
 #### 3.2 Pipelines for mosaic variant determination, annotations, and plotting for ID02, 03, and 04
+[Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/4dbsm_final_data_vali_new_data11.py) to filter and annotate and plot for ID02, 03, and 04.
 
 #### 3.3 Pipelines for statistically analysis, QC, and the related plotting
 Codes for the QC of [MPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_MPAS_het_and_ref_homo_controls.r) and [snMPAS](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/QC/Plot_snMPAS_het_and_ref_homo_controls.r) based on the heterozygous and reference homozygous control variants in the panel.
@@ -57,7 +58,7 @@ Codes for sorted population, and the QC for sorting were already described in th
 
 ### 4 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/Codes_for_plotting_main_figure_panels_based_on_MPAS_and_snMPAS_annotation.py) for the plotting of panels in the main figures and supplements for ID01
 
-[Codes]() for plotting supplement panels for ID02.
+[Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/plotting/4dbsm_final_data_vali_new_data_LIBD02.py) for plotting supplement panels for ID02.
 
 ### 5 [Jupyter Notebook](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/umap/4dbsm_umap.ipynb) for the UMAP
 
