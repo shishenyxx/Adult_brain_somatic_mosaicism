@@ -64,11 +64,7 @@ UMAP clustering from MPAS from bulk and sorted samples from ID01.
 ### 6 [Codes](https://github.com/shishenyxx/Adult_brain_somatic_mosaicism/blob/master/Lineage_construction/lineage_construction.py) for the lineage construction
 Lineage reconstruction based on snMPAS and MPAS evaluated genotypes from sorted nuclei as well as bulk and sorted populations from ID01.
 
-### 7 Cite the codes
-<b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM <i>et al.,</i> Gleeson JG. [Somatic mosaicism reveals clonal distributions of neocortical development.](https://www.nature.com/articles/s41586-022-04602-7) 2022. <i>(Nature, DOI:[10.1038/s41586-022-04602-7](https://doi.org/10.1038/s41586-022-04602-7))</i></b> PMID:[35444276](https://pubmed.ncbi.nlm.nih.gov/35444276/)
-
-
-### 8 Contact information
+### 7 Contact information
 
 :email: Asst. Prof. Martin Breuss: [martin.breuss@cuanschutz.edu](mailto:martin.breuss@cuanschutz.edu)
 
@@ -78,3 +74,7 @@ Lineage reconstruction based on snMPAS and MPAS evaluated genotypes from sorted 
 
 [Prof. Joseph Gleeson's lab at the University of California San Diego and Rady Children's Institute for Genomic Medicine](http://www.gleesonlab.org/index.html)
 
+
+### 8 Cite the codes
+
+<b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM <i>et al.,</i> Gleeson JG. [Somatic mosaicism reveals clonal distributions of neocortical development.](https://www.nature.com/articles/s41586-022-04602-7) 2022. <i>(Nature, DOI:[10.1038/s41586-022-04602-7](https://doi.org/10.1038/s41586-022-04602-7))</i></b> PMID:[35444276](https://pubmed.ncbi.nlm.nih.gov/35444276/)
