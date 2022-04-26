@@ -2,7 +2,7 @@
 
 This repository is a collaboration of codes and scripts used in the analysis of [a somatic mosaicism study of the NIMH Brain Somatic Mosaicism Network](https://bsmn.synapse.org/Explore/Studies/DetailsPage?id=syn22269661) on the entire human coretical regions, subregions, sorted populations, and single nuclei from ID01(Raw data are available at [the NDA website under study #919](https://nda.nih.gov/study.html?id=919)) and ID02-04 (Raw data are available on [SRA](https://trace.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA736951&o=acc_s%3Aa)). The 300x WGS panel of normal data is also available on [SRA](https://trace.ncbi.nlm.nih.gov/Traces/study/?acc=PRJNA660493&o=acc_s%3Aa).
 
-Cite the codes: <b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM et al., Gleeson JG. [Somatic mosaicism reveals clonal distributions of neocortical development.](https://www.nature.com/articles/s41586-022-04602-7) 2022. <i>(Nature)</i></b>
+Cite the codes: <b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM <i>et al.,</i> Gleeson JG. [Somatic mosaicism reveals clonal distributions of neocortical development.](https://www.nature.com/articles/s41586-022-04602-7) 2022. <i>(Nature)</i></b>
 
 -----------------------------------
 
