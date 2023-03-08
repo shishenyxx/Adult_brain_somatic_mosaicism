@@ -75,3 +75,7 @@ Lineage reconstruction based on snMPAS and MPAS evaluated genotypes from sorted 
 ### 8. Cite the codes
 
 <b>Breuss MW, Yang X, Antaki D, Schlachetzki JCM, <i>et al.,</i> Gleeson JG. [Somatic mosaicism reveals clonal distributions of neocortical development.](https://www.nature.com/articles/s41586-022-04602-7) 2022. (<i>Nature</i>, DOI:[10.1038/s41586-022-04602-7](https://doi.org/10.1038/s41586-022-04602-7),  PMID:[35444276](https://pubmed.ncbi.nlm.nih.gov/35444276/))</b>
+
+
+<img src="https://user-images.githubusercontent.com/17311837/223878022-1b92c9b1-6a9b-481e-be1d-6d1fbdd66668.png" alt="Sperm_Mosaic_Cover" width=40%> 
+
