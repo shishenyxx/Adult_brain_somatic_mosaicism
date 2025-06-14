@@ -66,11 +66,11 @@ Lineage reconstruction based on snMPAS and MPAS evaluated genotypes from sorted 
 
 ### 7. Contact information
 
-:email: Xiaoxu Yang: [u6055394@utah.edu](mailto:u6055394@utah.edu), [xiaoxuyanglab@gmail.com](mailto:xiaoxuyanglab@gmail.com), [xiy010@health.ucsd.edu](mailto:xiy010@health.ucsd.edu)
-
 :email: Martin Breuss: [martin.breuss@cuanschutz.edu](mailto:martin.breuss@cuanschutz.edu)
 
-:email: Joseph Gleeson: [jogleeson@health.ucsd.edu](mailto:jogleeson@health.ucsd.edu)
+:email: Xiaoxu Yang: [xiaoxu.yang@genetics.utah.edu](mailto:xiaoxu.yang@genetics.utah.edu), or the Yang Lab [xiaoxuyanglab@gmail.com](mailto:xiaoxuyanglab@gmail.com)
+
+:email: Joseph Gleeson: [jogleeson@health.ucsd.edu](mailto:jogleeson@health.ucsd.edu), or the Gleeson Lab [gleesonlab@health.ucsd.edu](mailto:gleesonlab@health.ucsd.edu)
 
 ### 8. Cite the codes
 
